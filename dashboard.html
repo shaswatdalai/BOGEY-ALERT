@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Insider Threat Detection Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --red: #E24B4A; --red-bg: #FCEBEB; --red-border: rgba(226,75,74,0.25);
+    --orange: #D97706; --orange-bg: #FFFBEB; --orange-border: rgba(217,119,6,0.25);
+    --yellow: #B45309; --yellow-bg: #FEF3C7; --yellow-border: rgba(180,83,9,0.2);
+    --blue: #1D4ED8; --blue-bg: #EFF6FF; --blue-border: rgba(29,78,216,0.2);
+    --green: #065F46; --green-bg: #ECFDF5;
+    --purple: #4C1D95; --purple-bg: #F5F3FF;
+    --surface: #ffffff;
+    --surface2: #F8FAFC;
+    --surface3: #F1F5F9;
+    --border: rgba(0,0,0,0.08);
+    --border2: rgba(0,0,0,0.12);
+    --text: #0F172A;
+    --text2: #475569;
+    --text3: #94A3B8;
+    --font: 'Inter', sans-serif;
+    --mono: 'JetBrains Mono', monospace;
+  }
+
+  body {
+    font-family: var(--font);
+    background: #0B1120;
+    min-height: 100vh;
+    padding: 24px;
+    color: var(--text);
+  }
+
+  /* Subtle grid texture on body */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .app { max-width: 1320px; margin: 0 auto; position: relative; z-index: 1; display: flex; flex-direction: column; gap: 18px; }
+
+  /* ── HEADER ── */
+  .header {
+    background: linear-gradient(135deg, #0F172A 0%, #1E293B 40%, #0F3460 100%);
+    border-radius: 18px;
+    padding: 26px 30px;
+    border: 1px solid rgba(255,255,255,0.06);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+    overflow: hidden;
+  }
+  .header::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 240px; height: 240px;
+    background: radial-gradient(circle, rgba(83,74,183,0.35) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .header::after {
+    content: '';
+    position: absolute;
+    bottom: -40px; left: 40%;
+    width: 200px; height: 200px;
+    background: radial-gradient(circle, rgba(14,165,233,0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hdr-left { position: relative; z-index: 1; }
+  .hdr-eyebrow {
+    font-size: 10px; font-weight: 600; letter-spacing: 1.5px;
+    text-transform: uppercase; color: #60A5FA; margin-bottom: 8px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .hdr-eyebrow::before {
+    content: ''; width: 18px; height: 1px; background: #60A5FA;
+  }
+  .header h1 {
+    font-size: 26px; font-weight: 700; color: #fff;
+    letter-spacing: -0.5px; line-height: 1.2;
+  }
+  .header h1 span { color: #60A5FA; }
+  .hdr-sub { color: rgba(255,255,255,0.45); font-size: 13px; margin-top: 6px; }
+  .hdr-badges { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+  .badge {
+    padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 600;
+    display: flex; align-items: center; gap: 6px; letter-spacing: 0.3px;
+  }
+  .badge-live {
+    background: rgba(16,185,129,0.15); color: #34D399;
+    border: 1px solid rgba(52,211,153,0.25);
+  }
+  .badge-model {
+    background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.5);
+    border: 1px solid rgba(255,255,255,0.1);
+    font-family: var(--mono); font-size: 10px;
+  }
+  .badge-privacy {
+    background: rgba(96,165,250,0.12); color: #93C5FD;
+    border: 1px solid rgba(147,197,253,0.2);
+  }
+  .pulse-dot {
+    width: 7px; height: 7px; border-radius: 50%; background: #34D399;
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(1.4)} }
+
+  .hdr-right { position: relative; z-index: 1; display: flex; align-items: center; gap: 24px; }
+
+  /* Threat meter */
+  .threat-ring { position: relative; width: 100px; height: 100px; }
+  .threat-ring svg { transform: rotate(-90deg); }
+  .ring-track { fill: none; stroke: rgba(255,255,255,0.06); stroke-width: 9; }
+  .ring-fill {
+    fill: none; stroke-width: 9; stroke-linecap: round;
+    stroke-dasharray: 283; stroke-dashoffset: 283;
+    transition: stroke-dashoffset 0.9s cubic-bezier(0.4,0,0.2,1), stroke 0.4s;
+  }
+  .ring-center {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+  }
+  .ring-val { font-size: 26px; font-weight: 700; color: #fff; font-family: var(--mono); line-height: 1; }
+  .ring-lbl { font-size: 9px; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
+
+  /* Session clock */
+  .session-info { text-align: right; }
+  .session-time { font-family: var(--mono); font-size: 22px; font-weight: 600; color: #fff; }
+  .session-date { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 2px; }
+  .session-uptime { font-size: 10px; color: rgba(255,255,255,0.3); margin-top: 6px; font-family: var(--mono); }
+
+  /* ── STAT CARDS ── */
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .stat {
+    background: var(--surface); border-radius: 16px;
+    padding: 20px; cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    position: relative; overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .stat:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(0,0,0,0.12); }
+  .stat::after {
+    content: ''; position: absolute;
+    bottom: -24px; right: -12px;
+    width: 72px; height: 72px; border-radius: 50%;
+    opacity: 0.1;
+  }
+  .stat-crit { border-top: 3px solid var(--red); }
+  .stat-crit::after { background: var(--red); }
+  .stat-high { border-top: 3px solid var(--orange); }
+  .stat-high::after { background: var(--orange); }
+  .stat-med  { border-top: 3px solid var(--yellow); }
+  .stat-med::after  { background: var(--yellow); }
+  .stat-low  { border-top: 3px solid var(--blue); }
+  .stat-low::after  { background: var(--blue); }
+
+  .stat-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .stat-icon {
+    width: 36px; height: 36px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center; font-size: 16px;
+  }
+  .stat-crit .stat-icon { background: var(--red-bg); }
+  .stat-high .stat-icon { background: var(--orange-bg); }
+  .stat-med  .stat-icon { background: var(--yellow-bg); }
+  .stat-low  .stat-icon { background: var(--blue-bg); }
+
+  .stat-trend { font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 8px; }
+  .stat-num { font-size: 38px; font-weight: 700; font-family: var(--mono); line-height: 1; }
+  .stat-crit .stat-num { color: var(--red); }
+  .stat-high .stat-num { color: var(--orange); }
+  .stat-med  .stat-num { color: var(--yellow); }
+  .stat-low  .stat-num { color: var(--blue); }
+  .stat-lbl { font-size: 12px; font-weight: 500; color: var(--text2); margin-top: 4px; }
+
+  /* ── MAIN GRID ── */
+  .main-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+
+  /* ── CARD ── */
+  .card {
+    background: var(--surface); border-radius: 16px;
+    border: 1px solid var(--border); padding: 22px 24px;
+  }
+  .card-title {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 1px; color: var(--text2);
+    display: flex; align-items: center; gap: 8px; margin-bottom: 18px;
+  }
+  .card-title-dot {
+    width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+  }
+
+  /* ── FORM ── */
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .fg { display: flex; flex-direction: column; gap: 6px; }
+  .fg label {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.8px;
+    text-transform: uppercase; color: var(--text3);
+  }
+  .fg input, .fg select {
+    padding: 9px 12px;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 10px;
+    font-size: 13px;
+    font-family: var(--font);
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .fg input:focus, .fg select:focus {
+    border-color: #3B82F6;
+    box-shadow: 0 0 0 3px rgba(59,130,246,0.12);
+  }
+
+  .analyze-btn {
+    width: 100%; padding: 12px;
+    background: linear-gradient(135deg, #1D4ED8, #4338CA);
+    color: #fff; border: none; border-radius: 12px;
+    font-size: 14px; font-weight: 600; font-family: var(--font);
+    cursor: pointer; letter-spacing: 0.2px;
+    transition: opacity 0.2s, transform 0.15s;
+    margin-top: 6px;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .analyze-btn:hover { opacity: 0.92; transform: translateY(-1px); }
+  .analyze-btn:active { transform: translateY(0); }
+  .analyze-btn svg { transition: transform 0.2s; }
+  .analyze-btn:hover svg { transform: translateX(3px); }
+
+  /* ── RESULT BOX ── */
+  .result-box {
+    display: none;
+    margin-top: 16px;
+    background: var(--surface2);
+    border-radius: 14px;
+    border: 1px solid var(--border2);
+    overflow: hidden;
+    animation: slideUp 0.3s ease;
+  }
+  @keyframes slideUp { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+  .result-top {
+    padding: 16px 18px;
+    display: flex; align-items: center; gap: 14px;
+  }
+  .result-score-circle {
+    width: 64px; height: 64px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; font-weight: 700; font-family: var(--mono);
+    flex-shrink: 0; border: 3px solid;
+    transition: all 0.4s;
+  }
+  .result-info { flex: 1; }
+  .result-level { font-size: 16px; font-weight: 700; }
+  .result-action { font-size: 12px; color: var(--text2); margin-top: 4px; line-height: 1.5; }
+  .risk-bar-wrap { padding: 0 18px 6px; }
+  .risk-bar-label {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 10px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.6px; color: var(--text3); margin-bottom: 6px;
+  }
+  .risk-bar-track {
+    height: 8px; background: var(--surface3); border-radius: 4px; overflow: hidden;
+  }
+  .risk-bar-fill {
+    height: 100%; border-radius: 4px;
+    transition: width 0.8s cubic-bezier(0.4,0,0.2,1);
+  }
+  .result-stats {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 0; border-top: 1px solid var(--border);
+  }
+  .rs {
+    text-align: center; padding: 12px 8px;
+    border-right: 1px solid var(--border);
+  }
+  .rs:last-child { border-right: none; }
+  .rs-val { font-size: 16px; font-weight: 700; font-family: var(--mono); color: var(--text); }
+  .rs-lbl { font-size: 10px; color: var(--text3); margin-top: 3px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  /* ── QUICK TESTS ── */
+  .q-btns { display: flex; flex-direction: column; gap: 10px; }
+  .q-btn {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 16px; border-radius: 12px; border: 1.5px solid;
+    cursor: pointer; transition: all 0.18s; text-align: left;
+    background: transparent; font-family: var(--font);
+  }
+  .q-btn:hover { transform: translateX(4px); }
+  .q-btn.norm { border-color: rgba(16,185,129,0.3); color: #065F46; }
+  .q-btn.norm:hover { background: #ECFDF5; }
+  .q-btn.warn { border-color: rgba(245,158,11,0.3); color: #92400E; }
+  .q-btn.warn:hover { background: #FFFBEB; }
+  .q-btn.crit { border-color: rgba(239,68,68,0.3); color: #7F1D1D; }
+  .q-btn.crit:hover { background: #FEF2F2; }
+  .q-icon-wrap {
+    width: 38px; height: 38px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; flex-shrink: 0;
+  }
+  .norm .q-icon-wrap { background: #D1FAE5; }
+  .warn .q-icon-wrap { background: #FEF3C7; }
+  .crit .q-icon-wrap { background: #FEE2E2; }
+  .q-text { flex: 1; }
+  .q-title { font-size: 13px; font-weight: 600; }
+  .q-sub { font-size: 11px; opacity: 0.65; margin-top: 2px; font-family: var(--mono); }
+  .q-arrow { font-size: 16px; opacity: 0.4; }
+
+  /* Breakdown bars */
+  .breakdown { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border); }
+  .breakdown-title {
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.8px; color: var(--text3); margin-bottom: 12px;
+  }
+  .bc-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .bc-lbl { font-size: 11px; font-weight: 500; color: var(--text2); width: 60px; text-align: right; flex-shrink: 0; }
+  .bc-track { flex: 1; height: 8px; background: var(--surface3); border-radius: 4px; overflow: hidden; }
+  .bc-fill { height: 100%; border-radius: 4px; transition: width 0.7s cubic-bezier(0.4,0,0.2,1); }
+  .bc-val { font-size: 11px; font-weight: 700; font-family: var(--mono); width: 28px; text-align: right; }
+
+  /* ── FEED ── */
+  .feed-card { grid-column: span 2; }
+  .feed-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .feed-count {
+    background: var(--surface2); border: 1px solid var(--border2);
+    padding: 3px 10px; border-radius: 20px;
+    font-size: 11px; font-weight: 600; color: var(--text2);
+    font-family: var(--mono);
+  }
+
+  .feed-list { display: flex; flex-direction: column; gap: 0; }
+  .feed-empty { text-align: center; padding: 32px; color: var(--text3); font-size: 13px; }
+  .feed-item {
+    display: flex; align-items: center; gap: 14px;
+    padding: 12px 14px; border-radius: 10px;
+    transition: background 0.15s; cursor: default;
+    border-bottom: 1px solid var(--border);
+    animation: feedIn 0.3s ease;
+  }
+  @keyframes feedIn { from{opacity:0;transform:translateX(-8px)} to{opacity:1;transform:translateX(0)} }
+  .feed-item:last-child { border-bottom: none; }
+  .feed-item:hover { background: var(--surface2); }
+  .fi-indicator {
+    width: 36px; height: 36px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700; font-family: var(--mono); flex-shrink: 0;
+  }
+  .fi-info { flex: 1; min-width: 0; }
+  .fi-top { display: flex; align-items: center; gap: 8px; }
+  .fi-emp { font-size: 13px; font-weight: 600; color: var(--text); }
+  .fi-tag {
+    padding: 2px 8px; border-radius: 8px;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.3px;
+  }
+  .fi-act { font-size: 11px; color: var(--text2); margin-top: 2px; font-family: var(--mono); }
+  .fi-right { text-align: right; flex-shrink: 0; }
+  .fi-score { font-size: 18px; font-weight: 700; font-family: var(--mono); }
+  .fi-time { font-size: 10px; color: var(--text3); margin-top: 2px; }
+
+  /* tag + indicator colors by level */
+  .tag-critical { background: var(--red-bg); color: var(--red); }
+  .tag-high     { background: var(--orange-bg); color: var(--orange); }
+  .tag-medium   { background: var(--yellow-bg); color: var(--yellow); }
+  .tag-low      { background: var(--blue-bg); color: var(--blue); }
+  .tag-normal   { background: var(--green-bg); color: var(--green); }
+  .ind-critical { background: var(--red-bg); color: var(--red); }
+  .ind-high     { background: var(--orange-bg); color: var(--orange); }
+  .ind-medium   { background: var(--yellow-bg); color: var(--yellow); }
+  .ind-low      { background: var(--blue-bg); color: var(--blue); }
+  .ind-normal   { background: var(--green-bg); color: var(--green); }
+
+  @media (max-width: 900px) {
+    .stats { grid-template-columns: 1fr 1fr; }
+    .main-grid { grid-template-columns: 1fr; }
+    .feed-card { grid-column: span 1; }
+    .hdr-right { display: none; }
+  }
+  @media (max-width: 560px) {
+    body { padding: 12px; }
+    .stats { grid-template-columns: 1fr 1fr; }
+    .form-row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="hdr-left">
+      <div class="hdr-eyebrow">Security Operations Center</div>
+      <h1>Insider <span>Threat</span> Detection</h1>
+      <div class="hdr-sub">Privacy-preserving AI behavioral analysis engine</div>
+      <div class="hdr-badges">
+        <div class="badge badge-live"><div class="pulse-dot"></div>System Active</div>
+        <div class="badge badge-model">model v2.4.1</div>
+        <div class="badge badge-privacy">🔒 Privacy Preserving</div>
+      </div>
+    </div>
+    <div class="hdr-right">
+      <div class="session-info">
+        <div class="session-time" id="clockTime">00:00:00</div>
+        <div class="session-date" id="clockDate">—</div>
+        <div class="session-uptime" id="uptime">UPTIME: 00:00:00</div>
+      </div>
+      <div class="threat-ring">
+        <svg width="100" height="100" viewBox="0 0 100 100">
+          <circle class="ring-track" cx="50" cy="50" r="45"/>
+          <circle class="ring-fill" id="ringFill" cx="50" cy="50" r="45" stroke="#34D399"/>
+        </svg>
+        <div class="ring-center">
+          <div class="ring-val" id="ringVal">0</div>
+          <div class="ring-lbl">Threat</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats">
+    <div class="stat stat-crit">
+      <div class="stat-header">
+        <div class="stat-icon">🔴</div>
+        <span class="stat-trend" style="background:#FEE2E2;color:#991B1B" id="critTrend">+0</span>
+      </div>
+      <div class="stat-num" id="critCount">0</div>
+      <div class="stat-lbl">Critical threats</div>
+    </div>
+    <div class="stat stat-high">
+      <div class="stat-header">
+        <div class="stat-icon">🟠</div>
+        <span class="stat-trend" style="background:#FEF3C7;color:#92400E" id="highTrend">+0</span>
+      </div>
+      <div class="stat-num" id="highCount">0</div>
+      <div class="stat-lbl">High risk</div>
+    </div>
+    <div class="stat stat-med">
+      <div class="stat-header">
+        <div class="stat-icon">🟡</div>
+        <span class="stat-trend" style="background:#FEF9C3;color:#713F12" id="medTrend">+0</span>
+      </div>
+      <div class="stat-num" id="medCount">0</div>
+      <div class="stat-lbl">Medium risk</div>
+    </div>
+    <div class="stat stat-low">
+      <div class="stat-header">
+        <div class="stat-icon">🔵</div>
+        <span class="stat-trend" style="background:#DBEAFE;color:#1E3A8A" id="lowTrend">+0</span>
+      </div>
+      <div class="stat-num" id="lowCount">0</div>
+      <div class="stat-lbl">Low / Normal</div>
+    </div>
+  </div>
+
+  <!-- MAIN GRID -->
+  <div class="main-grid">
+
+    <!-- Analyzer -->
+    <div class="card">
+      <div class="card-title">
+        <div class="card-title-dot" style="background:#3B82F6"></div>
+        Behavioral analyzer
+      </div>
+
+      <div class="form-row">
+        <div class="fg">
+          <label>Employee ID</label>
+          <select id="empId">
+            <option value="EMP_000">EMP_000 — Engineer</option>
+            <option value="EMP_001">EMP_001 — Manager</option>
+            <option value="EMP_002">EMP_002 — Analyst</option>
+            <option value="EMP_003">EMP_003 — Intern</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label>Login hour (0–23)</label>
+          <input type="number" id="loginHr" value="9" min="0" max="23">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="fg">
+          <label>Files accessed</label>
+          <input type="number" id="filesAcc" value="10" min="0">
+        </div>
+        <div class="fg">
+          <label>Sensitive files</label>
+          <input type="number" id="sensFiles" value="2" min="0">
+        </div>
+      </div>
+      <div class="fg" style="margin-bottom:12px">
+        <label>Data volume (MB)</label>
+        <input type="number" id="dataMb" value="50" min="0">
+      </div>
+
+      <button class="analyze-btn" onclick="runAnalysis()">
+        Run risk analysis
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M5 12h14M12 5l7 7-7 7"/>
+        </svg>
+      </button>
+
+      <!-- Result -->
+      <div class="result-box" id="resultBox">
+        <div class="result-top">
+          <div class="result-score-circle" id="scoreCircle">0</div>
+          <div class="result-info">
+            <div class="result-level" id="rLevel">—</div>
+            <div class="result-action" id="rAction">—</div>
+          </div>
+        </div>
+        <div class="risk-bar-wrap">
+          <div class="risk-bar-label">
+            <span>Risk score</span>
+            <span id="rScoreLabel">0 / 100</span>
+          </div>
+          <div class="risk-bar-track">
+            <div class="risk-bar-fill" id="rBarFill" style="width:0%"></div>
+          </div>
+        </div>
+        <div class="result-stats">
+          <div class="rs">
+            <div class="rs-val" id="rHour">—</div>
+            <div class="rs-lbl">Login hr</div>
+          </div>
+          <div class="rs">
+            <div class="rs-val" id="rFiles">—</div>
+            <div class="rs-lbl">Files</div>
+          </div>
+          <div class="rs">
+            <div class="rs-val" id="rData">—</div>
+            <div class="rs-lbl">MB</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick tests -->
+    <div class="card">
+      <div class="card-title">
+        <div class="card-title-dot" style="background:#8B5CF6"></div>
+        Quick scenarios
+      </div>
+
+      <div class="q-btns">
+        <button class="q-btn norm" onclick="quickTest('normal')">
+          <div class="q-icon-wrap">✓</div>
+          <div class="q-text">
+            <div class="q-title">Normal activity</div>
+            <div class="q-sub">09:00 · 10 files · 50 MB</div>
+          </div>
+          <span class="q-arrow">→</span>
+        </button>
+        <button class="q-btn warn" onclick="quickTest('warning')">
+          <div class="q-icon-wrap">!</div>
+          <div class="q-text">
+            <div class="q-title">Off-hours access</div>
+            <div class="q-sub">23:00 · 80 files · 800 MB</div>
+          </div>
+          <span class="q-arrow">→</span>
+        </button>
+        <button class="q-btn crit" onclick="quickTest('suspicious')">
+          <div class="q-icon-wrap">⚠</div>
+          <div class="q-text">
+            <div class="q-title">Critical exfiltration</div>
+            <div class="q-sub">03:00 · 500 files · 5000 MB</div>
+          </div>
+          <span class="q-arrow">→</span>
+        </button>
+      </div>
+
+      <!-- Breakdown chart -->
+      <div class="breakdown" id="breakdownWrap" style="display:none">
+        <div class="breakdown-title">Score breakdown</div>
+        <div class="bc-row">
+          <div class="bc-lbl">Time</div>
+          <div class="bc-track"><div class="bc-fill" id="bcTime" style="width:0%;background:#E24B4A"></div></div>
+          <div class="bc-val" id="bvTime" style="color:#E24B4A">0</div>
+        </div>
+        <div class="bc-row">
+          <div class="bc-lbl">Volume</div>
+          <div class="bc-track"><div class="bc-fill" id="bcVol" style="width:0%;background:#D97706"></div></div>
+          <div class="bc-val" id="bvVol" style="color:#D97706">0</div>
+        </div>
+        <div class="bc-row">
+          <div class="bc-lbl">Sensitive</div>
+          <div class="bc-track"><div class="bc-fill" id="bcSens" style="width:0%;background:#B45309"></div></div>
+          <div class="bc-val" id="bvSens" style="color:#B45309">0</div>
+        </div>
+        <div class="bc-row">
+          <div class="bc-lbl">Behavior</div>
+          <div class="bc-track"><div class="bc-fill" id="bcBeh" style="width:0%;background:#1D4ED8"></div></div>
+          <div class="bc-val" id="bvBeh" style="color:#1D4ED8">0</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Activity feed -->
+    <div class="card feed-card">
+      <div class="feed-header">
+        <div class="card-title" style="margin-bottom:0">
+          <div class="card-title-dot" style="background:#10B981"></div>
+          Activity feed
+        </div>
+        <div class="feed-count" id="feedCount">0 events</div>
+      </div>
+      <div id="feedList">
+        <div class="feed-empty">No activity yet — run an analysis above to begin monitoring</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // ── State ──
+  const alerts = [];
+  let totalAnalyzed = 0;
+  const startTime = Date.now();
+  const counts = { CRITICAL: 0, HIGH: 0, MEDIUM: 0, LOW: 0, NORMAL: 0 };
+
+  const baselines = {
+    EMP_000: { files: 10, hour: 9, mb: 50 },
+    EMP_001: { files: 15, hour: 10, mb: 80 },
+    EMP_002: { files: 8,  hour: 9,  mb: 40 },
+    EMP_003: { files: 5,  hour: 9,  mb: 20 }
+  };
+
+  // ── Risk calculation ──
+  function calcRisk(emp, hour, files, sens, mb) {
+    const bl = baselines[emp] || baselines.EMP_000;
+    let score = 0;
+
+    // Time anomaly
+    const offHours = (hour < 6 || hour > 21) ? 1 : 0;
+    const deepNight = (hour >= 0 && hour < 5) ? 1 : 0;
+    const tScore = Math.min(100, offHours * 35 + deepNight * 25);
+    score += tScore;
+
+    // File volume vs baseline
+    const fr = files / Math.max(bl.files, 1);
+    const vScore = Math.min(100, Math.round(
+      fr > 20 ? 35 : fr > 10 ? 25 : fr > 5 ? 15 : fr > 2 ? 8 : 2
+    ));
+    score += vScore;
+
+    // Sensitive file ratio
+    const sr = files > 0 ? sens / files : 0;
+    const sScore = Math.min(100, Math.round(
+      sr > 0.7 ? 20 : sr > 0.5 ? 13 : sr > 0.3 ? 7 : 2
+    ));
+    score += sScore;
+
+    // Data volume vs baseline
+    const dr = mb / Math.max(bl.mb, 1);
+    const bScore = Math.min(100, Math.round(
+      dr > 50 ? 20 : dr > 20 ? 14 : dr > 5 ? 8 : dr > 2 ? 4 : 1
+    ));
+    score += bScore;
+
+    score = Math.min(100, Math.round(score));
+
+    let level, action, color, bgColor, borderColor;
+    if (score >= 80) {
+      level = 'CRITICAL'; action = 'Immediate account suspension recommended';
+      color = '#E24B4A'; bgColor = '#FCEBEB'; borderColor = '#E24B4A';
+    } else if (score >= 60) {
+      level = 'HIGH'; action = 'Escalate to security team immediately';
+      color = '#D97706'; bgColor = '#FFFBEB'; borderColor = '#D97706';
+    } else if (score >= 35) {
+      level = 'MEDIUM'; action = 'Flag for security review within 24 hours';
+      color = '#B45309'; bgColor = '#FEF3C7'; borderColor = '#B45309';
+    } else if (score >= 15) {
+      level = 'LOW'; action = 'Log event and monitor closely';
+      color = '#1D4ED8'; bgColor = '#EFF6FF'; borderColor = '#1D4ED8';
+    } else {
+      level = 'NORMAL'; action = 'No action required — within normal parameters';
+      color = '#065F46'; bgColor = '#ECFDF5'; borderColor = '#10B981';
+    }
+
+    return { score, level, action, color, bgColor, borderColor,
+             tScore: Math.max(0, tScore), vScore: Math.max(0, vScore),
+             sScore: Math.max(0, sScore), bScore: Math.max(0, bScore) };
+  }
+
+  // ── Run analysis ──
+  function runAnalysis() {
+    const emp   = document.getElementById('empId').value;
+    const hr    = parseInt(document.getElementById('loginHr').value) || 0;
+    const fa    = parseInt(document.getElementById('filesAcc').value) || 0;
+    const sf    = parseInt(document.getElementById('sensFiles').value) || 0;
+    const mb    = parseInt(document.getElementById('dataMb').value) || 0;
+
+    const r = calcRisk(emp, hr, fa, sf, mb);
+    totalAnalyzed++;
+
+    showResult(r, hr, fa, mb);
+    updateRing(r.score, r.color);
+    updateBreakdown(r);
+    addToFeed(emp, hr, fa, sf, mb, r);
+    updateCounts(r.level);
+  }
+
+  function showResult(r, hr, fa, mb) {
+    const box = document.getElementById('resultBox');
+    box.style.display = 'block';
+
+    const circle = document.getElementById('scoreCircle');
+    circle.textContent = r.score;
+    circle.style.color = r.color;
+    circle.style.borderColor = r.color;
+    circle.style.background = r.bgColor;
+
+    document.getElementById('rLevel').textContent = r.level;
+    document.getElementById('rLevel').style.color = r.color;
+    document.getElementById('rAction').textContent = r.action;
+    document.getElementById('rScoreLabel').textContent = r.score + ' / 100';
+    document.getElementById('rBarFill').style.width = r.score + '%';
+    document.getElementById('rBarFill').style.background = r.color;
+    document.getElementById('rHour').textContent = hr + ':00';
+    document.getElementById('rFiles').textContent = fa;
+    document.getElementById('rData').textContent = mb;
+  }
+
+  function updateRing(score, color) {
+    const circumference = 283; // 2π×45
+    const offset = circumference - (score / 100) * circumference;
+    const fill = document.getElementById('ringFill');
+    fill.style.strokeDashoffset = offset;
+    fill.style.stroke = color;
+    document.getElementById('ringVal').textContent = score;
+  }
+
+  function updateBreakdown(r) {
+    const wrap = document.getElementById('breakdownWrap');
+    wrap.style.display = 'block';
+    setTimeout(() => {
+      document.getElementById('bcTime').style.width = r.tScore + '%';
+      document.getElementById('bvTime').textContent = r.tScore;
+      document.getElementById('bcVol').style.width = r.vScore + '%';
+      document.getElementById('bvVol').textContent = r.vScore;
+      document.getElementById('bcSens').style.width = r.sScore + '%';
+      document.getElementById('bvSens').textContent = r.sScore;
+      document.getElementById('bcBeh').style.width = r.bScore + '%';
+      document.getElementById('bvBeh').textContent = r.bScore;
+    }, 50);
+  }
+
+  function addToFeed(emp, hr, fa, sf, mb, r) {
+    const now = new Date();
+    const time = now.toLocaleTimeString('en-US', { hour12: false });
+    alerts.unshift({ emp, hr, fa, sf, mb, r, time });
+    if (alerts.length > 20) alerts.pop();
+    renderFeed();
+  }
+
+  function renderFeed() {
+    const list = document.getElementById('feedList');
+    if (alerts.length === 0) {
+      list.innerHTML = '<div class="feed-empty">No activity yet — run an analysis above to begin monitoring</div>';
+      return;
+    }
+    const key = r => r.level.toLowerCase();
+    list.innerHTML = alerts.map(a => `
+      <div class="feed-item">
+        <div class="fi-indicator ind-${key(a.r)}">${a.r.score}</div>
+        <div class="fi-info">
+          <div class="fi-top">
+            <span class="fi-emp">${a.emp}</span>
+            <span class="fi-tag tag-${key(a.r)}">${a.r.level}</span>
+          </div>
+          <div class="fi-act">${a.fa} files @ ${a.hr}:00 · ${a.sf} sensitive · ${a.mb} MB</div>
+        </div>
+        <div class="fi-right">
+          <div class="fi-score" style="color:${a.r.color}">${a.r.score}</div>
+          <div class="fi-time">${a.time}</div>
+        </div>
+      </div>
+    `).join('');
+    document.getElementById('feedCount').textContent = alerts.length + ' events';
+  }
+
+  function updateCounts(level) {
+    const map = { CRITICAL: 'crit', HIGH: 'high', MEDIUM: 'med', LOW: 'low', NORMAL: 'low' };
+    const id = map[level] || 'low';
+    if (level !== 'NORMAL') {
+      counts[level]++;
+    } else {
+      counts.LOW++;
+    }
+    document.getElementById('critCount').textContent = counts.CRITICAL;
+    document.getElementById('highCount').textContent = counts.HIGH;
+    document.getElementById('medCount').textContent = counts.MEDIUM;
+    document.getElementById('lowCount').textContent = (counts.LOW + counts.NORMAL);
+
+    const trends = ['crit','high','med','low'];
+    trends.forEach(t => {
+      const el = document.getElementById(t + 'Trend');
+      const val = t === 'crit' ? counts.CRITICAL : t === 'high' ? counts.HIGH : t === 'med' ? counts.MEDIUM : counts.LOW + counts.NORMAL;
+      el.textContent = '+' + val;
+    });
+  }
+
+  // ── Quick tests ──
+  function quickTest(type) {
+    const presets = {
+      normal:     { hr: 9,  fa: 10,  sf: 2,   mb: 50   },
+      warning:    { hr: 23, fa: 80,  sf: 60,  mb: 800  },
+      suspicious: { hr: 3,  fa: 500, sf: 150, mb: 5000 }
+    };
+    const p = presets[type];
+    document.getElementById('loginHr').value    = p.hr;
+    document.getElementById('filesAcc').value   = p.fa;
+    document.getElementById('sensFiles').value  = p.sf;
+    document.getElementById('dataMb').value     = p.mb;
+    runAnalysis();
+  }
+
+  // ── Clock ──
+  function updateClock() {
+    const now = new Date();
+    document.getElementById('clockTime').textContent =
+      now.toLocaleTimeString('en-US', { hour12: false });
+    document.getElementById('clockDate').textContent =
+      now.toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric', year:'numeric' });
+
+    const elapsed = Math.floor((Date.now() - startTime) / 1000);
+    const h = String(Math.floor(elapsed / 3600)).padStart(2, '0');
+    const m = String(Math.floor((elapsed % 3600) / 60)).padStart(2, '0');
+    const s = String(elapsed % 60).padStart(2, '0');
+    document.getElementById('uptime').textContent = `UPTIME: ${h}:${m}:${s}`;
+  }
+  updateClock();
+  setInterval(updateClock, 1000);
+</script>
+</body>
+</html>
