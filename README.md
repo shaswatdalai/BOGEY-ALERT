@@ -1,149 +1,148 @@
-﻿# 🛡️ BOGEY-ALERT
+# 🛡️ BOGEY - ALERT
 
 ## Privacy-Aware AI-Based Insider Threat Detection System
 
 ---
 
-## What This Project Does
+## 📋 PROJECT OVERVIEW
 
-BOGEY-ALERT detects suspicious employee behavior using AI. It learns normal work patterns of each employee and flags anomalies that could indicate data theft or policy violations.
+**BOGEY - ALERT** is an intelligent insider threat detection system that uses machine learning to identify suspicious employee behavior while preserving privacy. The system learns normal work patterns of employees and automatically flags anomalies that could indicate data theft or policy violations.
 
-### Examples of What It Detects:
-- Night time 3 AM login with 500 file downloads (normal is 9 AM with 10 files)
-- Accessing sensitive files outside job role
-- Unusual data volume transfers (downloading GBs of data)
-- Working at odd hours repeatedly
+### Key Features
 
----
-
-## How to Run on Any System
-
-### Prerequisites
-- Python 3.8 or higher installed
-- Internet connection for installing packages
-
-### Step-by-Step Instructions
-
-**Step 1: Install required packages**
-```
-pip install pandas numpy scikit-learn fastapi uvicorn joblib requests
-```
-
-**Step 2: Generate synthetic employee data**
-```
-python generate_data.py
-```
-*This creates 20 employees with 30 days of activity (600 records)*
-
-**Step 3: Train the AI model**
-```
-python anomaly_detector.py
-```
-*This teaches the AI what normal behavior looks like*
-
-**Step 4: Start the API server**
-```
-python api.py
-```
-*Keep this terminal window open - the server needs to stay running*
-
-**Step 5: Open the dashboard**
-```
-start dashboard.html
-```
-*Or simply double-click the dashboard.html file*
-
-**Step 6: Test the system**
-On the dashboard, click these buttons:
-- Normal Employee button -> Shows 0 per cent risk
-- Suspicious button -> Shows 60-70 per cent risk
-- Warning button -> Shows 60-70 per cent risk
-
-**Step 7: Stop the server**
-Go back to the API terminal and press Ctrl + C
+| Feature | Description |
+|---------|-------------|
+| 🔍 **Anomaly Detection** | Uses Isolation Forest AI model to identify unusual behavior |
+| 📊 **Risk Scoring** | 0-100 scale with severity levels (NORMAL → LOW → MEDIUM → HIGH → CRITICAL) |
+| 🖥️ **Visual Dashboard** | Beautiful HTML interface for real-time monitoring |
+| 🔒 **Privacy First** | All processing runs locally - no data leaves the server |
+| ⚡ **REST API** | FastAPI backend for real-time predictions |
+| 📈 **High Accuracy** | 91%+ accuracy on test data |
 
 ---
 
-## What You Will See
+## 🎯 WHAT THIS SYSTEM DOES
 
-### Test Results:
+### Detects These Suspicious Activities:
+
+- ✅ **Unusual login times** (3 AM access when normally 9 AM)
+- ✅ **Bulk file downloads** (500 files vs normal 10-15 files)
+- ✅ **Excessive sensitive file access** (Accessing confidential data outside job role)
+- ✅ **Abnormal data volume** (Downloading GBs of data)
+
+### Example Detection:
 
 | Scenario | Behavior | Risk Score | Result |
 |----------|----------|------------|--------|
-| Normal Employee | 9 AM login, 10 files | 0/100 | NORMAL |
-| Suspicious | 3 AM login, 500 files | 64/100 | HIGH RISK |
-| Data Theft | 11 PM, 80 sensitive files | 63/100 | HIGH RISK |
+| Normal Employee | 9 AM login, 10 files | 0% | ✅ NORMAL |
+| Suspicious Employee | 3 AM login, 500 files | 64% | 🟠 HIGH RISK |
+| Data Theft Attempt | 11 PM, 80 sensitive files | 63% | 🟠 HIGH RISK |
 
 ---
 
-## Files in This Repository
+## 🏗️ PROJECT STRUCTURE
 
-| File | Purpose |
-|------|---------|
-| generate_data.py | Creates synthetic employee activity data |
-| employee_logs.csv | Generated data (600 records, 20 employees) |
-| anomaly_detector.py | Trains the Isolation Forest AI model |
-| anomaly_model.pkl | Trained AI model (the brain) |
-| scaler.pkl | Data normalizer for the model |
-| api.py | FastAPI server for real-time detection |
-| dashboard.html | Visual dashboard for security team |
-| demo.py | Test script to verify everything works |
 
----
+threat_detector/
+│
+├── 📄 generate_data.py # Creates synthetic employee data
+├── 📄 employee_logs.csv # 600 records of 20 employees (30 days)
+├── 📄 anomaly_detector.py # Trains the Isolation Forest model
+├── 📄 anomaly_model.pkl # Trained AI model (the "brain")
+├── 📄 scaler.pkl # Data normalizer for the model
+├── 📄 api.py # FastAPI server for real-time detection
+├── 📄 dashboard.html # Visual dashboard for monitoring
+├── 📄 demo.py # Test script for API
+└── 📄 README.md # This file
 
-## Technical Details
 
-**Algorithm:** Isolation Forest (Unsupervised Machine Learning)
-
-**Model Performance:**
-- Training data: 600 records
-- Accuracy: 91.2 percent
-- Response time: Less than 100ms per request
-
-**Risk Levels:**
-- 0-9 per cent: NORMAL - No action needed
-- 10-29 per cent: LOW - Log for pattern analysis
-- 30-49 per cent: MEDIUM - Monitor closely
-- 50-69 per cent: HIGH - Urgent review required
-- 70-100 per cent: CRITICAL - Immediate block and alert security
 
 ---
 
-## Project Status
+## 🚀 WHAT I BUILT (50% COMPLETE)
 
-**Current Progress: 50 per cent COMPLETE**
+### ✅ Completed Features
 
-Completed:
-- Synthetic data generator
-- Anomaly detection model (91 per cent accuracy)
-- Risk scoring engine
-- REST API
-- Visual dashboard
+| Component | Status | Description |
+|-----------|--------|-------------|
+| Synthetic Data Generator | ✅ DONE | Creates realistic employee activity logs |
+| Anomaly Detection Model | ✅ DONE | Isolation Forest trained on 600 records |
+| Risk Scoring Engine | ✅ DONE | 0-100 scale with 5 severity levels |
+| REST API | ✅ DONE | FastAPI endpoint for predictions |
+| Visual Dashboard | ✅ DONE | HTML/CSS/JS interface |
+| Real-time Monitoring | ✅ DONE | Automatic activity simulation |
 
-Next Phase (75-100 per cent):
-- RAG pipeline for document context
-- Local LLM integration (Llama 3) for explanations
-- React dashboard with real-time alerts
+### 📊 Model Performance
 
----
 
-## Troubleshooting
+Training Data: 600 employee activity records
+Employees: 20 employees × 30 days
+Anomaly Rate: 10% (58 anomalies)
+Model Accuracy: 91.2%
+Response Time: <100ms per request
 
-| Problem | Solution |
-|---------|----------|
-| pip not recognized | Reinstall Python and check Add to PATH |
-| Module not found | Run: pip install package_name |
-| API won't start | Check if port 8000 is in use |
-| Dashboard shows no connection | Make sure api.py is running |
-| Model file not found | Run anomaly_detector.py first |
 
 ---
 
-## Contact
+## 🔧 HOW TO RUN THE SYSTEM
 
-**Developer:** Shaswat Kumar Dalai
-**Email:** 1am23cs194@amceducation.in
-**GitHub:** github.com/shaswatdalai
+### Prerequisites
 
----
+```bash
+# Install required packages
+pip install pandas numpy scikit-learn fastapi uvicorn joblib requests
+
+Step 1: Open VS Code Terminal
+Open VS Code and open your threat_detector folder. Then open a new terminal.
+
+Step 2: Install Required Packages
+Copy and paste this command in terminal and press Enter:
+
+pip install pandas numpy scikit-learn fastapi uvicorn joblib requests
+Step 3: Generate Employee Data
+Copy and paste:
+
+python generate_data.py
+Wait for it to finish. You should see "✅ Data generation complete!"
+
+Step 4: Train the AI Model
+Copy and paste:
+
+
+python anomaly_detector.py
+Wait for it to finish. You should see "✅ MODEL BUILDING COMPLETE!"
+
+Step 5: Start the API Server
+Copy and paste:
+
+
+python api.py
+You will see "Uvicorn running on http://127.0.0.1:8000". Keep this terminal open and running. Do not close it.
+
+Step 6: Open the Dashboard
+Open a new terminal. Click the plus (+) icon in the terminal panel.
+
+In the new terminal, type:
+
+
+start dashboard.html
+Or simply double click the dashboard.html file from your folder.
+
+Step 7: Test the System
+On the dashboard that opened in your browser:
+
+Click the "Suspicious (3 AM, 500 files)" button.
+
+You will see a risk score of around 60-70% with HIGH risk level.
+
+Click the "Normal Employee (9 AM, 10 files)" button.
+
+You will see a risk score of 0% with NORMAL status.
+
+Step 8: Stop the System
+To stop the API server, go back to the first terminal and press:
+
+Ctrl + C
+Done!
+That's all. Your system is now working.
 
