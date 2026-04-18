@@ -27,9 +27,9 @@ export function calcLocal(emp, hour, files, sens, mb) {
   const vScore = Math.min(
     100,
     fr > 20 ? 35 :
-    fr > 10 ? 25 :
-    fr > 5 ? 15 :
-    fr > 2 ? 8 : 2
+      fr > 10 ? 25 :
+        fr > 5 ? 15 :
+          fr > 2 ? 8 : 2
   );
 
   score += vScore;
@@ -39,8 +39,8 @@ export function calcLocal(emp, hour, files, sens, mb) {
   const sScore = Math.min(
     100,
     sr > 0.7 ? 20 :
-    sr > 0.5 ? 13 :
-    sr > 0.3 ? 7 : 2
+      sr > 0.5 ? 13 :
+        sr > 0.3 ? 7 : 2
   );
 
   score += sScore;
@@ -50,9 +50,9 @@ export function calcLocal(emp, hour, files, sens, mb) {
   const bScore = Math.min(
     100,
     dr > 50 ? 20 :
-    dr > 20 ? 14 :
-    dr > 5 ? 8 :
-    dr > 2 ? 4 : 1
+      dr > 20 ? 14 :
+        dr > 5 ? 8 :
+          dr > 2 ? 4 : 1
   );
 
   score += bScore;
@@ -66,25 +66,25 @@ export function calcLocal(emp, hour, files, sens, mb) {
     action = "Immediate account suspension recommended";
     color = "#E24B4A";
     bgColor = "#FCEBEB";
-  } 
+  }
   else if (score >= 60) {
     level = "HIGH";
     action = "Escalate to security team immediately";
     color = "#D97706";
     bgColor = "#FFFBEB";
-  } 
+  }
   else if (score >= 35) {
     level = "MEDIUM";
     action = "Flag for security review within 24 hours";
     color = "#B45309";
     bgColor = "#FEF3C7";
-  } 
+  }
   else if (score >= 15) {
     level = "LOW";
     action = "Log event and monitor closely";
     color = "#1D4ED8";
     bgColor = "#EFF6FF";
-  } 
+  }
   else {
     level = "NORMAL";
     action = "No action required — within normal parameters";
@@ -152,6 +152,7 @@ const Analyzer = forwardRef(function Analyzer({ onResult }, ref) {
       sens: f.sens,
       mb: f.mb,
       emp: f.emp,
+      ragExplanation: null,  // NEW: Initialize RAG explanation
     };
 
     try {
@@ -169,9 +170,10 @@ const Analyzer = forwardRef(function Analyzer({ onResult }, ref) {
         score: data.risk_score,
         level: data.risk_level,
         action: data.recommended_action,
+        ragExplanation: data.rag_explanation || null,  // NEW: Capture RAG explanation from API
       };
 
-    } catch {}
+    } catch { }
 
     setResult(res);
     onResult?.(res);

@@ -56,7 +56,9 @@ export default function App() {
         level: result.level,
         time: new Date().toLocaleTimeString("en-US", {
           hour12: false
-        })
+        }),
+        // NEW: RAG explanation field
+        ragExplanation: result.ragExplanation || null
       },
 
       ...prev.slice(0, 49)
