@@ -26,23 +26,37 @@ export default function ActivityFeed({ alerts }) {
         <div className="flex flex-col divide-y divide-slate-100">
           {alerts.map((a, i) => {
             const s = S[a.level] || S.NORMAL;
+            const hasRag = a.ragExplanation && a.ragExplanation.length > 0;
             return (
-              <div key={i} className="-mx-2 flex items-center gap-3 rounded-lg px-2 py-3 transition hover:bg-slate-50"
+              <div key={i} className="-mx-2 rounded-lg px-2 py-3 transition hover:bg-slate-50"
                 style={{ animation: i === 0 ? "feedIn 0.3s ease" : undefined }}>
-                <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl font-mono text-xs font-bold"
-                  style={{ background: s.ind, color: s.score }}>{a.score}</div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold text-slate-800">{a.emp}</span>
-                    <span className={`rounded-md px-2 py-0.5 text-[10px] font-bold ${s.tag}`}>{a.level}</span>
+                <div className="flex items-center gap-3">
+                  <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl font-mono text-xs font-bold"
+                    style={{ background: s.ind, color: s.score }}>{a.score}</div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold text-slate-800">{a.emp}</span>
+                      <span className={`rounded-md px-2 py-0.5 text-[10px] font-bold ${s.tag}`}>{a.level}</span>
+                    </div>
+                    <div className="mt-0.5 truncate font-mono text-[11px] text-slate-400">
+                      {a.files} files @ {a.hr}:00 · {a.sens} sensitive · {a.mb} MB
+                    </div>
+                    {/* NEW: RAG Explanation inline */}
+                    {hasRag && (
+                      <div className="mt-2 rounded-md bg-blue-50 p-2 border border-blue-100">
+                        <div className="flex items-start gap-1.5">
+                          <span className="text-xs">📋</span>
+                          <span className="text-[10px] font-medium text-blue-700 break-words">
+                            {a.ragExplanation.length > 100 ? a.ragExplanation.substring(0, 100) + "..." : a.ragExplanation}
+                          </span>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  <div className="mt-0.5 truncate font-mono text-[11px] text-slate-400">
-                    {a.files} files @ {a.hr}:00 · {a.sens} sensitive · {a.mb} MB
+                  <div className="flex-shrink-0 text-right">
+                    <div className="font-mono text-lg font-bold" style={{ color: s.score }}>{a.score}</div>
+                    <div className="text-[10px] text-slate-400">{a.time}</div>
                   </div>
-                </div>
-                <div className="flex-shrink-0 text-right">
-                  <div className="font-mono text-lg font-bold" style={{ color: s.score }}>{a.score}</div>
-                  <div className="text-[10px] text-slate-400">{a.time}</div>
                 </div>
               </div>
             );

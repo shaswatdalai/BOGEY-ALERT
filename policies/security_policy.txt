@@ -1,0 +1,38 @@
+COMPANY SECURITY INCIDENT RESPONSE
+
+Policy Number: SEC-2024-003
+Effective Date: January 1, 2024
+
+INSIDER THREAT RESPONSE PROTOCOL:
+
+RISK LEVEL 1 (0-9%) - NORMAL:
+- No action required
+- Continue monitoring
+
+RISK LEVEL 2 (10-29%) - LOW:
+- Log incident for pattern analysis
+- Review after 7 days if pattern continues
+
+RISK LEVEL 3 (30-49%) - MEDIUM:
+- Notify direct manager
+- Monitor for 24 hours
+- Schedule awareness training if needed
+
+RISK LEVEL 4 (50-69%) - HIGH:
+- Immediate notification to Security Team
+- Temporary restriction of access
+- Investigation within 2 hours
+- Employee interview within 24 hours
+
+RISK LEVEL 5 (70-100%) - CRITICAL:
+- Immediate account suspension
+- Physical security alerted
+- Forensic investigation initiated
+- Legal department notified
+- Potential termination process
+
+ESCALATION MATRIX:
+- Security Analyst → Initial review (15 min)
+- Security Lead → Escalation (1 hour)
+- CISO → Critical incidents (immediate)
+- Legal → Data breach potential (2 hours)

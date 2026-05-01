@@ -1,0 +1,25 @@
+COMPANY DATA PROTECTION POLICY
+
+Policy Number: DP-2024-001
+Effective Date: January 1, 2024
+
+DATA CLASSIFICATION:
+- Public: Information that can be shared externally
+- Internal: Information for internal use only
+- Confidential: Sensitive business information
+- Restricted: Highly sensitive data (PII, financial, trade secrets)
+
+DATA ACCESS RULES:
+1. Employees may only access data required for their job role
+2. Bulk downloads (>100 files) require manager approval
+3. Access to Restricted data requires special authorization
+4. Data transfers to personal devices are prohibited
+
+VIOLATION SEVERITY:
+- Level 1 (Minor): Unauthorized access to Internal data - Warning
+- Level 2 (Moderate): Unauthorized access to Confidential data - Written warning
+- Level 3 (Serious): Bulk download of Restricted data - Suspension
+- Level 4 (Critical): Data exfiltration outside company - Termination + Legal action
+
+REPORTING:
+All suspicious activities must be reported to IT Security within 1 hour.

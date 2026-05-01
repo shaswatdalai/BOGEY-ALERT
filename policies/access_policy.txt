@@ -1,0 +1,37 @@
+COMPANY ACCESS CONTROL POLICY
+
+Policy Number: AC-2024-002
+Effective Date: January 1, 2024
+
+WORKING HOURS:
+- Standard working hours: 9:00 AM to 5:00 PM
+- After-hours access requires manager notification
+- Weekend access requires prior approval
+
+FILE ACCESS NORMS BY ROLE:
+
+ENGINEER:
+- Normal files per day: 10-20
+- Sensitive files per day: 2-5
+- Expected work hours: 9 AM - 6 PM
+
+MANAGER:
+- Normal files per day: 8-15
+- Sensitive files per day: 3-8
+- Expected work hours: 9 AM - 7 PM
+
+ANALYST:
+- Normal files per day: 15-25
+- Sensitive files per day: 5-10
+- Expected work hours: 8 AM - 5 PM
+
+INTERN:
+- Normal files per day: 5-10
+- Sensitive files per day: 0-2
+- Expected work hours: 10 AM - 4 PM
+
+SUSPICIOUS BEHAVIOR INDICATORS:
+1. Login outside working hours without notification
+2. File access volume >3x normal
+3. Accessing Restricted data without authorization
+4. Downloading data to USB drives or personal cloud

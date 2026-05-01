@@ -20,6 +20,13 @@ export default function DashboardPage({
   analyzerRef
 }) {
 
+  // Wrapper function to handle result and pass RAG explanation
+  const handleResultWithRag = (result) => {
+    // Call the original onResult with the result
+    // The result already contains ragExplanation from Analyzer
+    onResult(result);
+  };
+
   return (
     <div className="space-y-5 p-6">
 
@@ -42,7 +49,7 @@ export default function DashboardPage({
 
         <Analyzer
           ref={analyzerRef}
-          onResult={onResult}
+          onResult={handleResultWithRag}
         />
 
         <QuickScenarios

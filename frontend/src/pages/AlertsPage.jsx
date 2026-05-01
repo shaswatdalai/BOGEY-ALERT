@@ -16,17 +16,23 @@ const LEVEL_C = {
 };
 
 const SAMPLE = [
-  { id: "INC-001", emp: "EMP_003", name: "Taylor Morgan", level: "CRITICAL", score: 88, status: "open",      time: "Today 03:14",    desc: "3 AM login with 480 sensitive files accessed — 96× baseline volume" },
-  { id: "INC-002", emp: "EMP_001", name: "Jordan Lee",    level: "HIGH",     score: 67, status: "reviewing", time: "Yesterday 22:51",desc: "Late-night 500 MB data transfer detected, 5× normal volume for this employee" },
-  { id: "INC-003", emp: "EMP_002", name: "Sam Rivera",    level: "MEDIUM",   score: 42, status: "reviewing", time: "2 days ago",     desc: "Unusual access to 60 sensitive files at 11 PM outside normal working hours" },
-  { id: "INC-004", emp: "EMP_000", name: "Alex Chen",     level: "LOW",      score: 18, status: "resolved",  time: "3 days ago",     desc: "Minor deviation — accessed 22 files vs baseline of 10, within acceptable range" },
-  { id: "INC-005", emp: "EMP_003", name: "Taylor Morgan", level: "HIGH",     score: 71, status: "resolved",  time: "4 days ago",     desc: "Weekend access with large file download detected (2 GB total)" },
-  { id: "INC-006", emp: "EMP_001", name: "Jordan Lee",    level: "MEDIUM",   score: 39, status: "dismissed", time: "5 days ago",     desc: "Accessed 3 sensitive documents outside normal hours — confirmed business trip" },
+  { id: "INC-001", emp: "EMP_003", name: "Taylor Morgan", level: "CRITICAL", score: 88, status: "open",      time: "Today 03:14",    desc: "3 AM login with 480 sensitive files accessed — 96× baseline volume", ragExplanation: "Employee accessed 480 files at 3 AM. Normal baseline is 5 files. Files contain customer PII. Policy P-12 prohibits bulk downloads outside business hours." },
+  { id: "INC-002", emp: "EMP_001", name: "Jordan Lee",    level: "HIGH",     score: 67, status: "reviewing", time: "Yesterday 22:51",desc: "Late-night 500 MB data transfer detected, 5× normal volume for this employee", ragExplanation: "Data transfer of 500 MB at 11 PM. Employee role requires prior approval for after-hours transfers. No approval found." },
+  { id: "INC-003", emp: "EMP_002", name: "Sam Rivera",    level: "MEDIUM",   score: 42, status: "reviewing", time: "2 days ago",     desc: "Unusual access to 60 sensitive files at 11 PM outside normal working hours", ragExplanation: null },
+  { id: "INC-004", emp: "EMP_000", name: "Alex Chen",     level: "LOW",      score: 18, status: "resolved",  time: "3 days ago",     desc: "Minor deviation — accessed 22 files vs baseline of 10, within acceptable range", ragExplanation: null },
+  { id: "INC-005", emp: "EMP_003", name: "Taylor Morgan", level: "HIGH",     score: 71, status: "resolved",  time: "4 days ago",     desc: "Weekend access with large file download detected (2 GB total)", ragExplanation: "Weekend access with 2GB download. Employee had prior approval for weekend project work. Marked as resolved." },
+  { id: "INC-006", emp: "EMP_001", name: "Jordan Lee",    level: "MEDIUM",   score: 39, status: "dismissed", time: "5 days ago",     desc: "Accessed 3 sensitive documents outside normal hours — confirmed business trip", ragExplanation: "Employee was on approved business trip. Access related to client presentation. Dismissed." },
 ];
 
 export default function AlertsPage({ liveAlerts }) {
   const [statusFilter, setStatusFilter] = useState("all");
   const [incidents, setIncidents]       = useState(SAMPLE);
+  const [expandedRag, setExpandedRag] = useState({});
+
+  // Toggle RAG explanation expansion
+  const toggleRag = (id) => {
+    setExpandedRag(prev => ({ ...prev, [id]: !prev[id] }));
+  };
 
   // Merge high/critical live alerts from the dashboard session
   const liveIncidents = liveAlerts
@@ -40,6 +46,7 @@ export default function AlertsPage({ liveAlerts }) {
       desc:   `${a.files} files accessed at ${a.hr}:00 · ${a.mb} MB transferred · ${a.sens} sensitive files`,
       time:   a.time,
       status: "open",
+      ragExplanation: a.ragExplanation || null,
     }));
 
   const all      = [...liveIncidents, ...incidents];
@@ -99,6 +106,8 @@ export default function AlertsPage({ liveAlerts }) {
           const lc = LEVEL_C[inc.level] || LEVEL_C.LOW;
           const sc = STATUS_CFG[inc.status] || STATUS_CFG.open;
           const { Icon } = sc;
+          const isExpanded = expandedRag[inc.id];
+          const hasRag = inc.ragExplanation && inc.ragExplanation.length > 0;
 
           return (
             <div
@@ -131,6 +140,30 @@ export default function AlertsPage({ liveAlerts }) {
                     </span>
                   </div>
                   <p className="mt-1.5 text-xs leading-relaxed text-slate-500">{inc.desc}</p>
+                  
+                  {/* NEW: RAG Explanation Section */}
+                  {hasRag && (
+                    <div className="mt-3 rounded-lg border border-blue-200 bg-blue-50 p-3">
+                      <div className="flex items-start gap-2">
+                        <span className="text-sm">📋</span>
+                        <div className="flex-1">
+                          <span className="text-xs font-semibold text-blue-800">RAG Contextual Analysis</span>
+                          <p className={`text-xs text-blue-700 mt-1 ${!isExpanded ? 'line-clamp-2' : ''}`}>
+                            {inc.ragExplanation}
+                          </p>
+                          {inc.ragExplanation.length > 150 && (
+                            <button
+                              onClick={() => toggleRag(inc.id)}
+                              className="mt-1 text-xs font-medium text-blue-600 hover:text-blue-800"
+                            >
+                              {isExpanded ? 'Show less ↑' : 'Show more ↓'}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
                   <div className="mt-1 text-[10px] text-slate-400">{inc.time}</div>
                 </div>
 

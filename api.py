@@ -43,6 +43,16 @@ print("📂 Loading historical data...")
 df = pd.read_csv('employee_logs.csv')
 print(f"✅ Loaded {len(df)} historical records")
 
+# Try to load RAG pipeline (optional - continues even if fails)
+rag_pipeline = None
+try:
+    from rag_pipeline import RAGPipeline
+    rag_pipeline = RAGPipeline()
+    print("✅ RAG Pipeline loaded successfully!")
+except Exception as e:
+    print(f"⚠️ RAG Pipeline not available (non-critical): {e}")
+    print("   The API will still work without RAG explanations")
+
 # Create the API app
 app = FastAPI(
     title="Insider Threat Detection System",
@@ -82,13 +92,14 @@ def health_check():
     return {
         "status": "healthy",
         "model_loaded": True,
+        "rag_available": rag_pipeline is not None,
         "timestamp": datetime.now().isoformat()
     }
 
 @app.post("/detect")
 def detect_threat(activity: ActivityRequest) -> Dict:
     """
-    Analyze employee activity and return risk score
+    Analyze employee activity and return risk score with RAG explanation
     """
     try:
         # Calculate sensitive ratio
@@ -138,14 +149,42 @@ def detect_threat(activity: ActivityRequest) -> Dict:
         if len(emp_data) > 0:
             normal_files = float(emp_data['files_accessed'].mean())
             normal_hour = float(emp_data['login_hour'].mean())
+            # Try to get role if available
+            normal_role = emp_data['role'].iloc[0] if 'role' in emp_data.columns else "employee"
         else:
             normal_files = float(df['files_accessed'].mean())
             normal_hour = float(df['login_hour'].mean())
+            normal_role = "employee"
         
         # Convert is_anomaly to Python bool
         is_anomaly = bool(prediction == -1)
         
-        return {
+        # ========== RAG INTEGRATION (Only for anomalies) ==========
+        rag_explanation = None
+        
+        if rag_pipeline is not None and risk_score > 0:
+            try:
+                # Prepare anomaly data for RAG
+                anomaly_data = {
+                    "employee_id": activity.employee_id,
+                    "role": normal_role,
+                    "login_hour": activity.login_hour,
+                    "files_accessed": activity.files_accessed,
+                    "sensitive_files": activity.sensitive_files,
+                    "data_mb": activity.data_mb
+                }
+                
+                # Generate explanation
+                rag_explanation, rag_context = rag_pipeline.generate_explanation(
+                    anomaly_data, risk_score, risk_level
+                )
+            except Exception as e:
+                print(f"⚠️ RAG error (non-critical): {e}")
+                rag_explanation = "RAG context temporarily unavailable"
+        # ==========================================================
+        
+        # Prepare response
+        response = {
             "employee_id": str(activity.employee_id),
             "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "is_anomaly": is_anomaly,
@@ -160,6 +199,12 @@ def detect_threat(activity: ActivityRequest) -> Dict:
                 "files_deviation": round(float(activity.files_accessed - normal_files), 1)
             }
         }
+        
+        # Add RAG explanation if available
+        if rag_explanation:
+            response["rag_explanation"] = rag_explanation
+        
+        return response
     
     except Exception as e:
         print(f"❌ Error in detect_threat: {e}")
@@ -178,7 +223,16 @@ def get_statistics():
         "total_employees": total_employees,
         "total_activities_trained": total_records,
         "anomaly_rate": f"{anomalies/total_records*100:.1f}%",
-        "model_status": "active"
+        "model_status": "active",
+        "rag_available": rag_pipeline is not None
+    }
+
+@app.get("/rag/status")
+def rag_status():
+    """Check if RAG pipeline is available"""
+    return {
+        "rag_available": rag_pipeline is not None,
+        "message": "RAG pipeline is active" if rag_pipeline else "RAG pipeline not loaded"
     }
 
 print("\n" + "=" * 50)
