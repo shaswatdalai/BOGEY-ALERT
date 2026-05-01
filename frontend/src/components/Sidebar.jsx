@@ -1,11 +1,12 @@
-import { Shield, LayoutDashboard, BarChart2, Users, Bell, Settings, ChevronRight, LogOut } from "lucide-react";
+import { Shield, LayoutDashboard, BarChart2, Users, Bell, Settings, ChevronRight, LogOut, BookOpen } from "lucide-react";
 
 const NAV = [
-  { id: "dashboard", label: "Dashboard",  icon: LayoutDashboard },
-  { id: "analytics", label: "Analytics",  icon: BarChart2 },
-  { id: "employees", label: "Employees",  icon: Users },
-  { id: "alerts",    label: "Alerts",     icon: Bell },
-  { id: "settings",  label: "Settings",   icon: Settings },
+  { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { id: "analytics", label: "Analytics", icon: BarChart2 },
+  { id: "employees", label: "Employees", icon: Users },
+  { id: "alerts", label: "Alerts", icon: Bell },
+  { id: "exceptions", label: "Exceptions", icon: BookOpen },
+  { id: "settings", label: "Settings", icon: Settings },
 ];
 
 export default function Sidebar({ active, onChange, alertCount }) {
@@ -17,8 +18,8 @@ export default function Sidebar({ active, onChange, alertCount }) {
           <Shield size={15} className="text-white" />
         </div>
         <div>
-          <div className="text-sm font-bold leading-none text-white">ThreatWatch</div>
-          <div className="mt-0.5 text-[10px] text-white/30">v2.4.1</div>
+          <div className="text-sm font-bold leading-none text-white">BOGEY-ALERT</div>
+          <div className="mt-0.5 text-[10px] text-white/30">v2.0</div>
         </div>
       </div>
 
@@ -63,4 +64,4 @@ export default function Sidebar({ active, onChange, alertCount }) {
       </div>
     </aside>
   );
-}
+} 

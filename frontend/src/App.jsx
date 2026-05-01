@@ -4,8 +4,9 @@ import Topbar from "./components/Topbar.jsx";
 import DashboardPage from "./pages/DashboardPage.jsx";
 import AnalyticsPage from "./pages/AnalyticsPage.jsx";
 import EmployeesPage from "./pages/EmployeesPage.jsx";
-import AlertsPage from "./pages/AlertsPage.jsx";
+import AlertPage from "./pages/AlertPage.jsx";
 import SettingsPage from "./pages/SettingsPage.jsx";
+import ExceptionManager from "./pages/ExceptionManager.jsx";
 
 export default function App() {
 
@@ -57,7 +58,6 @@ export default function App() {
         time: new Date().toLocaleTimeString("en-US", {
           hour12: false
         }),
-        // NEW: RAG explanation field
         ragExplanation: result.ragExplanation || null
       },
 
@@ -96,11 +96,15 @@ export default function App() {
     ),
 
     alerts: (
-      <AlertsPage liveAlerts={alerts} />
+      <AlertPage liveAlerts={alerts} />
     ),
 
     settings: (
       <SettingsPage />
+    ),
+
+    exceptions: (
+      <ExceptionManager />
     )
 
   };
