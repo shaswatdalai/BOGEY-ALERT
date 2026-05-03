@@ -9,9 +9,18 @@ const NAV = [
   { id: "settings", label: "Settings", icon: Settings },
 ];
 
+const NAV_THEMES = {
+  dashboard: { bg: "rgba(0, 212, 255, 0.15)", text: "#00d4ff", border: "rgba(0, 212, 255, 0.3)", shadow: "rgba(0, 212, 255, 0.2)" },
+  analytics: { bg: "rgba(168, 85, 247, 0.15)", text: "#c084fc", border: "rgba(168, 85, 247, 0.3)", shadow: "rgba(168, 85, 247, 0.2)" },
+  employees: { bg: "rgba(16, 185, 129, 0.15)", text: "#34d399", border: "rgba(16, 185, 129, 0.3)", shadow: "rgba(16, 185, 129, 0.2)" },
+  alerts:    { bg: "rgba(239, 68, 68, 0.15)", text: "#f87171", border: "rgba(239, 68, 68, 0.3)", shadow: "rgba(239, 68, 68, 0.2)" },
+  exceptions:{ bg: "rgba(245, 158, 11, 0.15)", text: "#fbbf24", border: "rgba(245, 158, 11, 0.3)", shadow: "rgba(245, 158, 11, 0.2)" },
+  settings:  { bg: "rgba(148, 163, 184, 0.15)", text: "#94a3b8", border: "rgba(148, 163, 184, 0.3)", shadow: "rgba(148, 163, 184, 0.2)" },
+};
+
 export default function Sidebar({ active, onChange, alertCount }) {
   return (
-    <aside className="flex h-screen w-56 flex-shrink-0 flex-col border-r border-white/5" style={{ background: "#0D1424" }}>
+    <aside className="flex h-full w-64 flex-shrink-0 flex-col border-r border-white/10 bg-black/20 backdrop-blur-sm transition-colors duration-700">
       {/* Logo */}
       <div className="flex items-center gap-3 border-b border-white/5 px-5 py-5">
         <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-600">
@@ -28,18 +37,25 @@ export default function Sidebar({ active, onChange, alertCount }) {
         <div className="mb-3 px-2 text-[9px] font-bold uppercase tracking-widest text-white/20">Main Menu</div>
         {NAV.map(({ id, label, icon: Icon }) => {
           const isActive = active === id;
+          const theme = NAV_THEMES[id] || NAV_THEMES.dashboard;
           return (
             <button
               key={id}
               onClick={() => onChange(id)}
-              className={`group relative flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-all duration-150
-                ${isActive ? "bg-blue-600 text-white shadow-lg" : "text-white/40 hover:bg-white/5 hover:text-white/80"}`}
+              className={`group relative flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-medium transition-all duration-500
+                ${isActive ? "border" : "text-white/50 hover:bg-white/5 hover:text-white/90 border border-transparent"}`}
+              style={isActive ? {
+                backgroundColor: theme.bg,
+                color: theme.text,
+                borderColor: theme.border,
+                boxShadow: `0 0 15px ${theme.shadow}`
+              } : {}}
             >
-              <Icon size={16} className={isActive ? "text-white" : "text-white/40 group-hover:text-white/70"} />
+              <Icon size={18} className={isActive ? "" : "text-white/40 group-hover:text-white/70"} style={isActive ? {color: theme.text} : {}} />
               <span className="flex-1">{label}</span>
               {id === "alerts" && alertCount > 0 && (
-                <span className={`flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[10px] font-bold
-                  ${isActive ? "bg-white/20 text-white" : "bg-red-500 text-white"}`}>
+                <span className={`flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[10px] font-bold shadow-[0_0_8px_#ef4444]
+                  ${isActive ? "bg-red-500 text-white" : "bg-red-500 text-white"}`}>
                   {alertCount > 99 ? "99+" : alertCount}
                 </span>
               )}

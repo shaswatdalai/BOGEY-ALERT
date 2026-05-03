@@ -311,6 +311,34 @@ class DeltaFileMonitor:
                     print("data handling policies when working with restricted files.")
                     print(f"{'*'*60}\n")
                 
+                if result.get("risk_level") in ["HIGH", "CRITICAL"]:
+                    print("\n" + "!"*60)
+                    print("⚠️ SECURITY AUDIT REQUIRED")
+                    print("Unusual or highly sensitive file activity has been flagged.")
+                    print("Please provide a valid business justification for this activity:")
+                    print("!"*60)
+                    excuse = input("\nYour Justification: ")
+                    
+                    print("\n[AI Auditor] Evaluating your response...")
+                    try:
+                        interrogate_res = requests.post(
+                            f"{YOUR_API_URL}/interrogate",
+                            json={
+                                "employee_id": EMPLOYEE_ID,
+                                "excuse": excuse,
+                                "original_risk_score": result.get("risk_score", 100),
+                                "context": f"Accessed {activity['total_files']} files, {activity['sensitive_files']} sensitive."
+                            },
+                            headers=headers,
+                            timeout=15
+                        )
+                        if interrogate_res.status_code == 200:
+                            ai_verdict = interrogate_res.json()
+                            print(f"\n[{ai_verdict.get('risk_level', 'EVALUATED')}] AI Verdict: {ai_verdict.get('recommended_action')}")
+                            print("!"*60 + "\n")
+                    except Exception as e:
+                        print(f"Failed to submit justification: {e}")
+                
                 return result
                 
         except Exception as e:

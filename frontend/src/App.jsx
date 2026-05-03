@@ -159,33 +159,44 @@ export default function App() {
 
   };
 
+  const THEME_COLORS = {
+    dashboard: "rgba(0, 212, 255, 0.15)", // Neon Blue
+    analytics: "rgba(168, 85, 247, 0.15)", // Purple
+    employees: "rgba(16, 185, 129, 0.15)", // Emerald
+    alerts: "rgba(239, 68, 68, 0.2)", // Crimson Red (slightly stronger for alerts)
+    exceptions: "rgba(245, 158, 11, 0.15)", // Amber/Gold
+    settings: "rgba(148, 163, 184, 0.15)", // Slate/Silver
+  };
 
+  const activeColor = THEME_COLORS[page] || THEME_COLORS.dashboard;
   return (
 
-    <div
-      className="flex h-screen overflow-hidden bg-slate-100"
-      style={{ fontFamily: "Inter, sans-serif" }}
-    >
-
-      <Sidebar
-        active={page}
-        onChange={setPage}
-        alertCount={unresolved}
-      />
-
-      <div className="flex flex-1 flex-col overflow-hidden">
-
-        <Topbar
-          page={page}
+    <div className="flex h-screen overflow-hidden bg-[#030305] bg-gradient-to-br from-[#030305] via-[#0a0a0f] to-[#030305] font-sans text-white relative transition-colors duration-500">
+      {/* Dark overlay for contrast */}
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-[1px] pointer-events-none z-0"></div>
+      
+      {/* Glassmorphism Dashboard Container */}
+      <div 
+        className="relative z-10 flex w-full max-w-[1400px] mx-auto my-6 overflow-hidden rounded-[2rem] bg-[#0a0a0f]/70 border border-white/10 backdrop-blur-xl transition-all duration-700 ease-in-out"
+        style={{ boxShadow: `0 0 60px ${activeColor}` }}
+      >
+        <Sidebar
+          active={page}
+          onChange={setPage}
           alertCount={unresolved}
         />
 
-        <main className="flex-1 overflow-y-auto">
-          {PAGES[page] || PAGES.dashboard}
-        </main>
+        <div className="flex flex-1 flex-col overflow-hidden">
+          <Topbar
+            page={page}
+            alertCount={unresolved}
+          />
 
+          <main className="flex-1 overflow-y-auto p-8 custom-scrollbar animate-fade-in" key={page}>
+            {PAGES[page] || PAGES.dashboard}
+          </main>
+        </div>
       </div>
-
     </div>
 
   );

@@ -31,8 +31,7 @@ export default function Header({ threatScore, scoreColor }) {
   const offset = circ - (threatScore / 100) * circ;
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-white/5"
-      style={{ background: "linear-gradient(135deg,#0F172A 0%,#1E293B 40%,#0F3460 100%)" }}>
+    <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-black/40 backdrop-blur-md shadow-lg">
       <div className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full"
         style={{ background: "radial-gradient(circle,rgba(83,74,183,0.35) 0%,transparent 70%)" }} />
       <div className="pointer-events-none absolute bottom-[-40px] left-[40%] h-52 w-52 rounded-full"
@@ -40,11 +39,11 @@ export default function Header({ threatScore, scoreColor }) {
 
       <div className="relative z-10 flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-blue-400">
-            <span className="h-px w-5 bg-blue-400" />Security Operations Center
+          <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-luxury-blue">
+            <span className="h-px w-5 bg-luxury-blue" />Security Operations Center
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-white">
-            Insider <span className="text-blue-400">Threat</span> Detection
+          <h1 className="text-3xl font-normal tracking-wide text-white serif-font drop-shadow-md">
+            Insider <span className="text-luxury-blue italic font-light drop-shadow-[0_0_10px_rgba(0,212,255,0.8)]">Threat</span> Detection
           </h1>
           <p className="mt-1 text-sm text-white/40">Privacy-preserving AI behavioral analysis engine</p>
           <div className="mt-4 flex flex-wrap gap-2">

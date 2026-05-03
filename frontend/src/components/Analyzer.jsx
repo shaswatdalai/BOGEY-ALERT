@@ -107,10 +107,10 @@ export function calcLocal(emp, hour, files, sens, mb) {
 }
 
 const iCls =
-  "w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-medium text-slate-800 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15";
+  "w-full rounded-xl border border-white/10 bg-[#0a0a0f] px-3 py-2.5 text-sm font-medium text-white outline-none transition focus:border-luxury-blue focus:ring-2 focus:ring-luxury-blue/20 placeholder-white/30";
 
 const lCls =
-  "mb-1.5 block text-[10px] font-bold uppercase tracking-widest text-slate-400";
+  "mb-1.5 block text-[10px] font-bold uppercase tracking-widest text-white/50";
 
 
 // ✅ React Component (default export)
@@ -189,11 +189,11 @@ const Analyzer = forwardRef(function Analyzer({ onResult }, ref) {
 
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-6">
+    <div className="rounded-2xl border border-white/10 bg-black/40 backdrop-blur-md p-6 shadow-lg">
 
       <div className="mb-5 flex items-center gap-2">
-        <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
-        <span className="text-xs font-bold uppercase tracking-widest text-slate-400">
+        <span className="h-1.5 w-1.5 rounded-full bg-luxury-blue" />
+        <span className="text-xs font-bold uppercase tracking-widest text-white/50">
           Behavioral Analyzer
         </span>
       </div>
@@ -209,11 +209,11 @@ const Analyzer = forwardRef(function Analyzer({ onResult }, ref) {
             onChange={(e) => set("emp", e.target.value)}
           >
 
-            <option value="EMP_000">EMP_000 — Engineer</option>
-            <option value="EMP_001">EMP_001 — Manager</option>
-            <option value="EMP_002">EMP_002 — Analyst</option>
-            <option value="EMP_003">EMP_003 — Intern</option>
-            <option value="FRIEND_001">FRIEND_001 — Remote Employee</option>  {/* ← ADDED */}
+            <option value="EMP_000" className="bg-[#0a0a0f]">EMP_000 — Engineer</option>
+            <option value="EMP_001" className="bg-[#0a0a0f]">EMP_001 — Manager</option>
+            <option value="EMP_002" className="bg-[#0a0a0f]">EMP_002 — Analyst</option>
+            <option value="EMP_003" className="bg-[#0a0a0f]">EMP_003 — Intern</option>
+            <option value="FRIEND_001" className="bg-[#0a0a0f]">FRIEND_001 — Remote Employee</option>
 
           </select>
         </div>
@@ -249,7 +249,7 @@ const Analyzer = forwardRef(function Analyzer({ onResult }, ref) {
         <button
           onClick={() => analyze()}
           disabled={loading}
-          className="mt-1 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 py-3 text-sm font-semibold text-white transition hover:opacity-90 hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-60"
+          className="mt-1 flex w-full items-center justify-center gap-2 rounded-xl bg-luxury-blue/20 border border-luxury-blue/30 py-3 text-sm font-semibold text-luxury-blue transition hover:bg-luxury-blue/30 hover:shadow-[0_0_15px_rgba(0,212,255,0.4)] active:translate-y-0 disabled:opacity-60"
         >
 
           {loading && <Loader2 size={15} className="animate-spin" />}

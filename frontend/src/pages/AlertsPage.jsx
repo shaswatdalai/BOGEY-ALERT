@@ -2,17 +2,17 @@ import { useState } from "react";
 import { CheckCircle, XCircle, Clock, AlertTriangle } from "lucide-react";
 
 const STATUS_CFG = {
-  open:      { label: "Open",      Icon: AlertTriangle, cls: "text-red-500 bg-red-50 border-red-200"       },
-  reviewing: { label: "Reviewing", Icon: Clock,         cls: "text-amber-500 bg-amber-50 border-amber-200" },
-  resolved:  { label: "Resolved",  Icon: CheckCircle,   cls: "text-emerald-600 bg-emerald-50 border-emerald-200" },
-  dismissed: { label: "Dismissed", Icon: XCircle,       cls: "text-slate-400 bg-slate-50 border-slate-200" },
+  open:      { label: "Open",      Icon: AlertTriangle, cls: "text-red-400 bg-red-500/10 border-red-500/20"       },
+  reviewing: { label: "Reviewing", Icon: Clock,         cls: "text-amber-400 bg-amber-500/10 border-amber-500/20" },
+  resolved:  { label: "Resolved",  Icon: CheckCircle,   cls: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20" },
+  dismissed: { label: "Dismissed", Icon: XCircle,       cls: "text-white/40 bg-white/5 border-white/10" },
 };
 
 const LEVEL_C = {
-  CRITICAL: { bg: "#FCEBEB", text: "#E24B4A" },
-  HIGH:     { bg: "#FFFBEB", text: "#D97706" },
-  MEDIUM:   { bg: "#FEF3C7", text: "#B45309" },
-  LOW:      { bg: "#EFF6FF", text: "#1D4ED8" },
+  CRITICAL: { bg: "rgba(239,68,68,0.15)", text: "#ef4444" },
+  HIGH:     { bg: "rgba(249,115,22,0.15)", text: "#f97316" },
+  MEDIUM:   { bg: "rgba(234,179,8,0.15)", text: "#eab308" },
+  LOW:      { bg: "rgba(59,130,246,0.15)", text: "#3b82f6" },
 };
 
 const SAMPLE = [
@@ -70,7 +70,7 @@ export default function AlertsPage({ liveAlerts }) {
   ];
 
   return (
-    <div className="space-y-5 p-6">
+    <div className="space-y-5 p-6 animate-fade-in">
 
       {/* Tab bar */}
       <div className="flex flex-wrap gap-2">
@@ -78,15 +78,15 @@ export default function AlertsPage({ liveAlerts }) {
           <button
             key={val}
             onClick={() => setStatusFilter(val)}
-            className={`flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-semibold transition
+            className={`flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-semibold transition hover:-translate-y-0.5
               ${statusFilter === val
-                ? "border-blue-500 bg-blue-600 text-white shadow-sm"
-                : "border-slate-200 bg-white text-slate-500 hover:bg-slate-50"}`}
+                ? "border-luxury-blue bg-luxury-blue/20 text-luxury-blue shadow-[0_0_10px_rgba(0,212,255,0.3)]"
+                : "border-white/10 bg-black/40 text-white/50 hover:bg-white/5"}`}
           >
             {label}
             <span
               className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold
-                ${statusFilter === val ? "bg-white/20 text-white" : "bg-slate-100 text-slate-400"}`}
+                ${statusFilter === val ? "bg-luxury-blue/30 text-white" : "bg-white/10 text-white/40"}`}
             >
               {count}
             </span>
@@ -97,7 +97,7 @@ export default function AlertsPage({ liveAlerts }) {
       {/* Incident list */}
       <div className="space-y-3">
         {filtered.length === 0 && (
-          <div className="rounded-2xl border border-slate-200 bg-white py-12 text-center text-slate-400">
+          <div className="rounded-2xl border border-white/10 bg-black/40 py-12 text-center text-white/50 italic shadow-lg">
             No incidents in this category
           </div>
         )}
@@ -112,12 +112,12 @@ export default function AlertsPage({ liveAlerts }) {
           return (
             <div
               key={inc.id}
-              className="rounded-2xl border border-slate-200 bg-white p-5 transition hover:shadow-md"
+              className="rounded-2xl border border-white/10 bg-black/40 backdrop-blur-md p-5 transition hover:shadow-[0_0_15px_rgba(0,212,255,0.15)] hover:border-luxury-blue/30"
             >
               <div className="flex items-start gap-4">
                 {/* Score circle */}
                 <div
-                  className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl border-2 font-mono text-lg font-bold"
+                  className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl border-2 font-mono text-lg font-bold shadow-[0_0_10px_currentColor]"
                   style={{ borderColor: lc.text, background: lc.bg, color: lc.text }}
                 >
                   {inc.score}
@@ -126,10 +126,10 @@ export default function AlertsPage({ liveAlerts }) {
                 {/* Content */}
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-mono text-xs font-bold text-slate-400">{inc.id}</span>
-                    <span className="text-sm font-bold text-slate-800">{inc.name}</span>
+                    <span className="font-mono text-xs font-bold text-white/40">{inc.id}</span>
+                    <span className="text-sm font-bold text-white/90">{inc.name}</span>
                     <span
-                      className="rounded-md px-2 py-0.5 text-[10px] font-bold"
+                      className="rounded-md px-2 py-0.5 text-[10px] font-bold border border-current"
                       style={{ background: lc.bg, color: lc.text }}
                     >
                       {inc.level}
@@ -139,22 +139,22 @@ export default function AlertsPage({ liveAlerts }) {
                       {sc.label}
                     </span>
                   </div>
-                  <p className="mt-1.5 text-xs leading-relaxed text-slate-500">{inc.desc}</p>
+                  <p className="mt-1.5 text-xs leading-relaxed text-white/60">{inc.desc}</p>
                   
                   {/* NEW: RAG Explanation Section */}
                   {hasRag && (
-                    <div className="mt-3 rounded-lg border border-blue-200 bg-blue-50 p-3">
+                    <div className="mt-3 rounded-lg border border-luxury-blue/30 bg-luxury-blue/10 p-3">
                       <div className="flex items-start gap-2">
                         <span className="text-sm">📋</span>
                         <div className="flex-1">
-                          <span className="text-xs font-semibold text-blue-800">RAG Contextual Analysis</span>
-                          <p className={`text-xs text-blue-700 mt-1 ${!isExpanded ? 'line-clamp-2' : ''}`}>
+                          <span className="text-xs font-semibold text-luxury-blue">RAG Contextual Analysis</span>
+                          <p className={`text-xs text-luxury-blue/80 mt-1 ${!isExpanded ? 'line-clamp-2' : ''}`}>
                             {inc.ragExplanation}
                           </p>
                           {inc.ragExplanation.length > 150 && (
                             <button
                               onClick={() => toggleRag(inc.id)}
-                              className="mt-1 text-xs font-medium text-blue-600 hover:text-blue-800"
+                              className="mt-1 text-xs font-medium text-luxury-blue hover:text-white"
                             >
                               {isExpanded ? 'Show less ↑' : 'Show more ↓'}
                             </button>
@@ -164,7 +164,7 @@ export default function AlertsPage({ liveAlerts }) {
                     </div>
                   )}
                   
-                  <div className="mt-1 text-[10px] text-slate-400">{inc.time}</div>
+                  <div className="mt-1 text-[10px] text-white/30">{inc.time}</div>
                 </div>
 
                 {/* Action buttons */}
@@ -173,13 +173,13 @@ export default function AlertsPage({ liveAlerts }) {
                     <>
                       <button
                         onClick={() => setStatus(inc.id, "reviewing")}
-                        className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-[11px] font-bold text-amber-700 transition hover:bg-amber-100"
+                        className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-[11px] font-bold text-amber-400 transition hover:bg-amber-500/20"
                       >
                         Review
                       </button>
                       <button
                         onClick={() => setStatus(inc.id, "dismissed")}
-                        className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-[11px] font-bold text-slate-500 transition hover:bg-slate-100"
+                        className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] font-bold text-white/50 transition hover:bg-white/10 hover:text-white/80"
                       >
                         Dismiss
                       </button>
@@ -188,7 +188,7 @@ export default function AlertsPage({ liveAlerts }) {
                   {inc.status === "reviewing" && (
                     <button
                       onClick={() => setStatus(inc.id, "resolved")}
-                      className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-[11px] font-bold text-emerald-700 transition hover:bg-emerald-100"
+                      className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-[11px] font-bold text-emerald-400 transition hover:bg-emerald-500/20"
                     >
                       Resolve
                     </button>
@@ -196,7 +196,7 @@ export default function AlertsPage({ liveAlerts }) {
                   {(inc.status === "resolved" || inc.status === "dismissed") && (
                     <button
                       onClick={() => setStatus(inc.id, "open")}
-                      className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-[11px] font-bold text-slate-400 transition hover:bg-slate-100"
+                      className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] font-bold text-white/50 transition hover:bg-white/10 hover:text-white/80"
                     >
                       Reopen
                     </button>

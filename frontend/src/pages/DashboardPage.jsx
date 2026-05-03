@@ -5,10 +5,10 @@ import QuickScenarios from "../components/QuickScenarios.jsx";
 import ActivityFeed from "../components/ActivityFeed.jsx";
 
 const STATS = [
-  { key:"CRITICAL", label:"Critical threats", icon:"🔴", topColor:"#E24B4A", numColor:"#E24B4A", bgColor:"#FCEBEB", borderColor:"#fca5a5" },
-  { key:"HIGH",     label:"High risk",         icon:"🟠", topColor:"#D97706", numColor:"#D97706", bgColor:"#FFFBEB", borderColor:"#fcd34d" },
-  { key:"MEDIUM",   label:"Medium risk",       icon:"🟡", topColor:"#B45309", numColor:"#B45309", bgColor:"#FEF3C7", borderColor:"#fde68a" },
-  { key:"LOW",      label:"Low / Normal",      icon:"🔵", topColor:"#1D4ED8", numColor:"#1D4ED8", bgColor:"#EFF6FF", borderColor:"#bfdbfe" },
+  { key:"CRITICAL", label:"Critical threats", icon:"🔴", topColor:"#ef4444", numColor:"#ef4444", bgColor:"rgba(239, 68, 68, 0.1)", borderColor:"rgba(239, 68, 68, 0.3)" },
+  { key:"HIGH",     label:"High risk",         icon:"🟠", topColor:"#f97316", numColor:"#f97316", bgColor:"rgba(249, 115, 22, 0.1)", borderColor:"rgba(249, 115, 22, 0.3)" },
+  { key:"MEDIUM",   label:"Medium risk",       icon:"🟡", topColor:"#eab308", numColor:"#eab308", bgColor:"rgba(234, 179, 8, 0.1)", borderColor:"rgba(234, 179, 8, 0.3)" },
+  { key:"LOW",      label:"Low / Normal",      icon:"🔵", topColor:"#00d4ff", numColor:"#00d4ff", bgColor:"rgba(0, 212, 255, 0.1)", borderColor:"rgba(0, 212, 255, 0.3)" },
 ];
 
 export default function DashboardPage({

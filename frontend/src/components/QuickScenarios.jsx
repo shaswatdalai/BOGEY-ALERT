@@ -1,15 +1,15 @@
 const SCENARIOS = [
-  { key:"normal",     label:"Normal activity",       sub:"09:00 · 10 files · 50 MB",   icon:"✓", cls:"border-emerald-200 text-emerald-800 hover:bg-emerald-50", iconBg:"bg-emerald-100", values:{hr:9,  files:10,  sens:2,   mb:50}   },
-  { key:"warning",    label:"Off-hours access",       sub:"23:00 · 80 files · 800 MB",  icon:"!", cls:"border-amber-200 text-amber-900 hover:bg-amber-50",       iconBg:"bg-amber-100",   values:{hr:23, files:80,  sens:60,  mb:800}  },
-  { key:"suspicious", label:"Critical exfiltration",  sub:"03:00 · 500 files · 5 GB",  icon:"⚠", cls:"border-red-200 text-red-900 hover:bg-red-50",             iconBg:"bg-red-100",     values:{hr:3,  files:500, sens:150, mb:5000} },
+  { key:"normal",     label:"Normal activity",       sub:"09:00 · 10 files · 50 MB",   icon:"✓", cls:"border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/10", iconBg:"bg-emerald-500/10", values:{hr:9,  files:10,  sens:2,   mb:50}   },
+  { key:"warning",    label:"Off-hours access",       sub:"23:00 · 80 files · 800 MB",  icon:"!", cls:"border-orange-500/20 text-orange-400 hover:bg-orange-500/10",       iconBg:"bg-orange-500/10",   values:{hr:23, files:80,  sens:60,  mb:800}  },
+  { key:"suspicious", label:"Critical exfiltration",  sub:"03:00 · 500 files · 5 GB",  icon:"⚠", cls:"border-red-500/20 text-red-400 hover:bg-red-500/10",             iconBg:"bg-red-500/10",     values:{hr:3,  files:500, sens:150, mb:5000} },
 ];
 
 export default function QuickScenarios({ onScenario }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-6">
+    <div className="rounded-2xl border border-white/10 bg-black/40 backdrop-blur-md p-6 shadow-lg">
       <div className="mb-5 flex items-center gap-2">
-        <span className="h-1.5 w-1.5 rounded-full bg-violet-500" />
-        <span className="text-xs font-bold uppercase tracking-widest text-slate-400">Quick Scenarios</span>
+        <span className="h-1.5 w-1.5 rounded-full bg-luxury-blue animate-pulse" />
+        <span className="text-xs font-bold uppercase tracking-widest text-white/50">Quick Scenarios</span>
       </div>
       <div className="flex flex-col gap-3">
         {SCENARIOS.map((s) => (
@@ -26,7 +26,7 @@ export default function QuickScenarios({ onScenario }) {
           </button>
         ))}
       </div>
-      <p className="mt-5 text-[11px] leading-relaxed text-slate-400">
+      <p className="mt-5 text-[11px] leading-relaxed text-white/30 italic">
         Clicking a scenario pre-fills the analyzer and immediately runs the risk analysis. Results appear in the left panel and activity feed.
       </p>
     </div>

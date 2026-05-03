@@ -5,9 +5,12 @@ import pandas as pd
 import numpy as np
 import joblib
 import os
+import requests
 from datetime import datetime
 from typing import Dict, List
 import asyncio
+
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 
 print("=" * 50)
 print("STARTING INSIDER THREAT DETECTION API")
@@ -127,6 +130,12 @@ class ActivityRequest(BaseModel):
     file_names: List[str] = None
     max_sensitivity: int = 0
 
+class InterrogationRequest(BaseModel):
+    employee_id: str
+    excuse: str
+    original_risk_score: int
+    context: str = ""
+
 @app.get("/")
 def home():
     return {
@@ -144,6 +153,64 @@ def health_check():
         "exceptions_available": exceptions_manager is not None,
         "timestamp": datetime.now().isoformat()
     }
+
+@app.post("/interrogate")
+async def interrogate_employee(request: InterrogationRequest) -> Dict:
+    prompt = f"""You are an internal AI Security Auditor for BOGEY-ALERT. 
+Employee {request.employee_id} recently triggered a HIGH/CRITICAL security alert.
+Context: {request.context}
+Original Risk Score: {request.original_risk_score}
+
+The employee has provided the following business justification/excuse:
+"{request.excuse}"
+
+Evaluate this excuse. If it seems like a valid business reason (e.g., asked by manager, routine maintenance), respond with EXACTLY the word "ACCEPTED" on the first line, followed by a short 1-sentence reason on the second line.
+If it seems evasive, suspicious, or violates standard policy, respond with EXACTLY the word "REJECTED" on the first line, followed by a 1-sentence reason on the second line.
+"""
+
+    try:
+        response = requests.post(
+            "https://api.groq.com/openai/v1/chat/completions",
+            headers={"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"},
+            json={
+                "model": "llama3-8b-8192",
+                "messages": [{"role": "user", "content": prompt}],
+                "temperature": 0.2,
+                "max_tokens": 100
+            },
+            timeout=10
+        )
+        
+        if response.status_code == 200:
+            content = response.json()["choices"][0]["message"]["content"].strip().split("\n")
+            verdict = content[0].strip().upper()
+            reason = content[1].strip() if len(content) > 1 else ""
+            
+            if "ACCEPTED" in verdict:
+                risk_level = "RESOLVED"
+                risk_score = 10
+            else:
+                risk_level = "CRITICAL"
+                risk_score = 100
+                
+            alert = {
+                "employee_id": request.employee_id,
+                "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "is_anomaly": True,
+                "risk_score": risk_score,
+                "risk_level": risk_level,
+                "recommended_action": f"AI Interrogation: {reason}",
+                "rag_explanation": f"[AI SECURITY AUDIT]\nVerdict: {verdict}\nReason: {reason}",
+                "details": {"current_files": 0, "normal_files_baseline": 0, "current_login_hour": 0, "normal_login_hour": 0, "files_deviation": 0}
+            }
+            
+            asyncio.create_task(manager.broadcast(alert))
+            return alert
+            
+    except Exception as e:
+        print(f"Error during interrogation: {e}")
+        
+    return {"status": "failed", "error": "LLM interrogation failed"}
 
 @app.post("/detect")
 async def detect_threat(activity: ActivityRequest) -> Dict:
