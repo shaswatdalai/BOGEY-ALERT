@@ -1,0 +1,24 @@
+# Secrets
+.env
+.env.local
+api_keys.txt
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.pkl
+employee_logs.csv
+exceptions.json
+
+# Environment
+venv/
+ENV/
+
+# Node / Frontend
+frontend/node_modules/
+frontend/dist/
+.DS_Store
+
+# Large binaries
+ngrok.exe

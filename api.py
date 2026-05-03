@@ -9,6 +9,10 @@ import requests
 from datetime import datetime
 from typing import Dict, List
 import asyncio
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 
