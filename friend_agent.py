@@ -9,9 +9,9 @@ from pathlib import Path
 # ============================================
 # CONFIGURATION - USE YOUR NGROK URL
 # ============================================
-YOUR_API_URL = "http://localhost:9091"  # ← Local testing URL
+YOUR_API_URL = "https://septum-agony-skillful.ngrok-free.dev"  # ← Local testing URL
 
-EMPLOYEE_ID = "FRIEND_001"  # Employee ID for your friend
+EMPLOYEE_ID = "EMP_002"  # Employee ID for your friend
 # ============================================
 
 # ============================================
@@ -301,13 +301,15 @@ class DeltaFileMonitor:
                 
                 # Print detailed alert for company data
                 if activity["company_data_files"]:
-                    print(f"\n{'='*60}")
-                    print(f"[ALERT] COMPANY DATA DETECTED!")
+                    print(f"\n{'*'*60}")
+                    print(f"🛡️ SECURITY NOTIFICATION")
+                    print(f"{'*'*60}")
+                    print("The following sensitive files were recently created or accessed:")
                     for cd in activity["company_data_files"]:
-                        print(f"   File: {cd['name']}")
-                        print(f"   Reason: {cd['reason']}")
-                        print(f"   Sensitivity: {cd['sensitivity']} (Score: {cd['score']})")
-                    print(f"{'='*60}\n")
+                        print(f"  → {cd['name']}")
+                    print("\nAs a friendly reminder, please ensure you follow the company's")
+                    print("data handling policies when working with restricted files.")
+                    print(f"{'*'*60}\n")
                 
                 return result
                 
@@ -317,14 +319,15 @@ class DeltaFileMonitor:
         return None
     
     def run(self):
+        print(f"\n👋 Welcome {EMPLOYEE_ID}! Hope you are having a nice day.\n")
         print(f"""
 +--------------------------------------------------------------+
-|              BOGEY-ALERT MONITORING AGENT                    |
+|              COMPANY DEVICE MONITORING AGENT                 |
 +--------------------------------------------------------------+
 |  Employee: {EMPLOYEE_ID:<48}|
 |  Server: {YOUR_API_URL:<50}|
-|  Status: RUNNING                                             |
-|  Mode: Company Data Detection ACTIVE                         |
+|  Status: ACTIVE                                              |
+|  Note: Your file activity is securely monitored for safety.  |
 +--------------------------------------------------------------+
         """)
         
@@ -336,13 +339,13 @@ class DeltaFileMonitor:
                 print(f"   [MISSING] {folder} (not found)")
         
         print("\n" + "="*60)
-        print("Agent is running. Sending data every 30 seconds...")
+        print("Agent is running. Sending data every 5 seconds...")
         print("Press Ctrl+C to stop")
         print("="*60 + "\n")
         
         try:
             while True:
-                time.sleep(30)
+                time.sleep(5)
                 
                 current_activity = self.get_new_activity()
                 
@@ -351,10 +354,10 @@ class DeltaFileMonitor:
                 
                 # Print summary
                 if current_activity["company_data_files"]:
-                    print(f"[ALERT] [{datetime.now().strftime('%H:%M:%S')}] COMPANY DATA: {len(current_activity['company_data_files'])} files detected")
+                    print(f"[*] [{datetime.now().strftime('%H:%M:%S')}] Processing {len(current_activity['company_data_files'])} synced files...")
                     self.send_alert(current_activity)
                 else:
-                    print(f"[OK] [{datetime.now().strftime('%H:%M:%S')}] {current_activity['total_files']} files, {current_activity['total_size_mb']:.0f}MB -> Personal files (no alert)")
+                    print(f"[*] [{datetime.now().strftime('%H:%M:%S')}] Synced {current_activity['total_files']} local files successfully.")
                     # Don't send alert for personal files
                 
         except KeyboardInterrupt:

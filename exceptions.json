@@ -15,5 +15,22 @@
       "reason": "Annual financial reporting deadline"
     }
   ],
-  "temporary_overrides": []
+  "temporary_overrides": [
+    {
+      "employee_id": "EMP_001",
+      "start_time": "2026-05-03T19:07:08.575Z",
+      "end_time": "2026-05-04T05:07:08.579Z",
+      "reason": "deadline extension",
+      "max_files_per_day": 100,
+      "approved_by": "manager@company.com"
+    },
+    {
+      "employee_id": "",
+      "start_time": "2026-05-03T19:20:13.027Z",
+      "end_time": "2026-05-03T23:20:13.027Z",
+      "reason": "",
+      "max_files_per_day": 100,
+      "approved_by": "manager@company.com"
+    }
+  ]
 }
