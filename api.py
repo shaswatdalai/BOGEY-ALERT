@@ -10,47 +10,48 @@ from typing import Dict, List
 import asyncio
 
 print("=" * 50)
-print("🚀 STARTING INSIDER THREAT DETECTION API")
+print("STARTING INSIDER THREAT DETECTION API")
 print("=" * 50)
 
 # Check if model files exist
 if not os.path.exists('anomaly_model.pkl'):
-    print("❌ ERROR: anomaly_model.pkl not found!")
-    print("📌 Please run: python anomaly_detector.py first")
+    print("[ERROR] anomaly_model.pkl not found!")
+    print("[INFO] Please run: python anomaly_detector.py first")
     exit(1)
 
 if not os.path.exists('scaler.pkl'):
-    print("❌ ERROR: scaler.pkl not found!")
-    print("📌 Please run: python anomaly_detector.py first")
+    print("[ERROR] scaler.pkl not found!")
+    print("[INFO] Please run: python anomaly_detector.py first")
     exit(1)
 
 if not os.path.exists('employee_logs.csv'):
-    print("❌ ERROR: employee_logs.csv not found!")
-    print("📌 Please run: python generate_data.py first")
+    print("[ERROR] employee_logs.csv not found!")
+    print("[INFO] Please run: python generate_data.py first")
     exit(1)
 
 # Load the trained model
-print("\n📂 Loading model...")
+print("\n[INFO] Loading model...")
 try:
     model = joblib.load('anomaly_model.pkl')
     scaler = joblib.load('scaler.pkl')
-    print("✅ Model loaded successfully!")
+    print("[SUCCESS] Model loaded successfully!")
 except Exception as e:
-    print(f"❌ Error loading model: {e}")
+    print(f"[ERROR] Error loading model: {e}")
     exit(1)
 
 # Load historical data for baseline
-print("📂 Loading historical data...")
+print("[INFO] Loading historical data...")
+
 df = pd.read_csv('employee_logs.csv')
-print(f"✅ Loaded {len(df)} historical records")
+print(f"[SUCCESS] Loaded {len(df)} historical records")
 
 # Load Exceptions Manager
 try:
     from exceptions_manager import ExceptionsManager
     exceptions_manager = ExceptionsManager()
-    print("✅ Exceptions Manager loaded successfully!")
+    print("[SUCCESS] Exceptions Manager loaded successfully!")
 except Exception as e:
-    print(f"⚠️ Exceptions Manager not loaded: {e}")
+    print(f"[WARN] Exceptions Manager not loaded: {e}")
     exceptions_manager = None
 
 # Try to load RAG pipeline
@@ -58,9 +59,9 @@ rag_pipeline = None
 try:
     from rag_pipeline import RAGPipeline
     rag_pipeline = RAGPipeline()
-    print("✅ RAG Pipeline loaded successfully!")
+    print("[SUCCESS] RAG Pipeline loaded successfully!")
 except Exception as e:
-    print(f"⚠️ RAG Pipeline not available: {e}")
+    print(f"[WARN] RAG Pipeline not available: {e}")
 
 # Create the API app
 app = FastAPI(
@@ -102,11 +103,18 @@ manager = ConnectionManager()
 
 @app.websocket("/ws/alerts")
 async def websocket_endpoint(websocket: WebSocket):
+    print(f"DEBUG: WebSocket attempt from {websocket.client}")
     await manager.connect(websocket)
+    print(f"DEBUG: WebSocket connected successfully")
     try:
         while True:
+            # Keep connection alive
             await websocket.receive_text()
     except WebSocketDisconnect:
+        manager.disconnect(websocket)
+        print(f"DEBUG: WebSocket disconnected")
+    except Exception as e:
+        print(f"DEBUG: WebSocket error: {e}")
         manager.disconnect(websocket)
 
 # Define request model
@@ -122,7 +130,7 @@ class ActivityRequest(BaseModel):
 @app.get("/")
 def home():
     return {
-        "message": "🛡️ BOGEY-ALERT - Insider Threat Detection System",
+        "message": "BOGEY-ALERT - Insider Threat Detection System",
         "status": "RUNNING",
         "version": "2.0"
     }
@@ -138,7 +146,7 @@ def health_check():
     }
 
 @app.post("/detect")
-def detect_threat(activity: ActivityRequest) -> Dict:
+async def detect_threat(activity: ActivityRequest) -> Dict:
     try:
         # Calculate sensitive ratio
         sensitive_ratio = activity.sensitive_files / (activity.files_accessed + 1)
@@ -177,7 +185,7 @@ def detect_threat(activity: ActivityRequest) -> Dict:
             
             if exception and exception.get("exempted"):
                 risk_score = 0
-                risk_level = "✅ EXEMPTED"
+                risk_level = "EXEMPTED"
                 action = f"Approved: {exception.get('reason')}"
                 
                 # Return exempted response
@@ -200,20 +208,27 @@ def detect_threat(activity: ActivityRequest) -> Dict:
                 return response
         
         # Determine risk level
+        # BOOST: If sensitive files are detected, ensure risk is at least MEDIUM
+        if activity.sensitive_files > 0:
+            sensitive_boost = min(30, activity.sensitive_files * 10)
+            risk_score = max(risk_score, 30 + sensitive_boost)
+            if activity.max_sensitivity >= 70: # High/Critical
+                risk_score = max(risk_score, 75)
+
         if risk_score >= 70:
-            risk_level = "🔴 CRITICAL"
+            risk_level = "CRITICAL"
             action = "IMMEDIATE BLOCK - Alert security team"
         elif risk_score >= 50:
-            risk_level = "🟠 HIGH"
+            risk_level = "HIGH"
             action = "Urgent review required"
         elif risk_score >= 30:
-            risk_level = "🟡 MEDIUM"
+            risk_level = "MEDIUM"
             action = "Monitor closely"
         elif risk_score >= 10:
-            risk_level = "🔵 LOW"
+            risk_level = "LOW"
             action = "Log for pattern analysis"
         else:
-            risk_level = "✅ NORMAL"
+            risk_level = "NORMAL"
             action = "No action needed"
         
         # Get employee's normal behavior
@@ -237,13 +252,14 @@ def detect_threat(activity: ActivityRequest) -> Dict:
                     "login_hour": activity.login_hour,
                     "files_accessed": activity.files_accessed,
                     "sensitive_files": activity.sensitive_files,
-                    "data_mb": activity.data_mb
+                    "data_mb": activity.data_mb,
+                    "file_names": activity.file_names
                 }
                 rag_explanation, _ = rag_pipeline.generate_explanation(
                     anomaly_data, risk_score, risk_level
                 )
             except Exception as e:
-                print(f"⚠️ RAG error: {e}")
+                print(f"[WARN] RAG error: {e}")
         
         response = {
             "employee_id": str(activity.employee_id),
@@ -252,6 +268,8 @@ def detect_threat(activity: ActivityRequest) -> Dict:
             "risk_score": int(risk_score),
             "risk_level": str(risk_level),
             "recommended_action": str(action),
+            "sensitive_files": int(activity.sensitive_files),
+            "data_mb": int(activity.data_mb),
             "details": {
                 "current_files": int(activity.files_accessed),
                 "normal_files_baseline": round(normal_files, 1),
@@ -263,14 +281,14 @@ def detect_threat(activity: ActivityRequest) -> Dict:
             "rag_explanation": rag_explanation
         }
         
-        # Broadcast high-risk alerts
-        if risk_score >= 50:
+        # Broadcast alerts for anything Medium risk or higher
+        if risk_score >= 30:
             asyncio.create_task(manager.broadcast(response))
         
         return response
     
     except Exception as e:
-        print(f"❌ Error in detect_threat: {e}")
+        print(f"[ERROR] Error in detect_threat: {e}")
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
@@ -315,14 +333,14 @@ def add_override(override: dict):
     return {"status": "success", "message": "Override added"}
 
 print("\n" + "=" * 50)
-print("✅ API IS READY TO START!")
+print("API IS READY TO START!")
 print("=" * 50)
-print("\n📡 Starting server at http://0.0.0.0:8000")
-print("📖 Interactive docs at http://localhost:8000/docs")
-print("\n⚠️  Keep this terminal running!")
+print("\nStarting server at http://0.0.0.0:8000")
+print("Interactive docs at http://localhost:8000/docs")
+print("\nKeep this terminal running!")
 print("   Press Ctrl+C to stop the server")
 print("=" * 50)
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=9091)

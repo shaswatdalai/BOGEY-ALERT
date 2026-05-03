@@ -1,10 +1,10 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Sidebar from "./components/Sidebar.jsx";
 import Topbar from "./components/Topbar.jsx";
 import DashboardPage from "./pages/DashboardPage.jsx";
 import AnalyticsPage from "./pages/AnalyticsPage.jsx";
 import EmployeesPage from "./pages/EmployeesPage.jsx";
-import AlertPage from "./pages/AlertPage.jsx";
+import AlertsPage from "./pages/AlertsPage.jsx";
 import SettingsPage from "./pages/SettingsPage.jsx";
 import ExceptionManager from "./pages/ExceptionManager.jsx";
 
@@ -67,6 +67,56 @@ export default function App() {
 
   }
 
+  // NEW: WebSocket connection for live alerts (e.g., from friend_agent.py)
+  useEffect(() => {
+    const ws = new WebSocket("ws://localhost:9091/ws/alerts");
+    
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        
+        // Map the backend response to the frontend alert format
+        setAlerts((prev) => [
+          {
+            emp: data.employee_id || "EMP_000",
+            hr: data.details?.current_login_hour || 0,
+            files: data.details?.current_files || 0,
+            sens: data.sensitive_files || 0,
+            mb: data.data_mb || 0,
+            score: data.risk_score,
+            level: data.risk_level.replace(/[^a-zA-Z]/g, '').trim().toUpperCase(), // Strip emojis like "🔴 CRITICAL" -> "CRITICAL"
+            time: new Date().toLocaleTimeString("en-US", { hour12: false }),
+            ragExplanation: data.rag_explanation || null,
+            file_names: data.file_names || []
+          },
+          ...prev.slice(0, 49)
+        ]);
+
+        // Update counts
+        const rawLevel = data.risk_level.replace(/[^a-zA-Z]/g, '').trim().toUpperCase();
+        const bucket = rawLevel === "NORMAL" || rawLevel === "EXEMPTED" ? "LOW" : rawLevel;
+        
+        setCounts((c) => ({
+          ...c,
+          [bucket]: (c[bucket] || 0) + 1
+        }));
+
+        // Flash latest threat score if we want (optional)
+        setThreat(data.risk_score);
+        if (data.risk_score >= 80) setColor("#E24B4A");
+        else if (data.risk_score >= 60) setColor("#D97706");
+        else if (data.risk_score >= 35) setColor("#B45309");
+        else setColor("#34D399");
+        
+      } catch (err) {
+        console.error("Error parsing live alert:", err);
+      }
+    };
+
+    ws.onclose = () => console.log("WebSocket disconnected");
+    
+    return () => ws.close();
+  }, []);
 
   const unresolved =
     alerts.filter((a) =>
@@ -96,7 +146,7 @@ export default function App() {
     ),
 
     alerts: (
-      <AlertPage liveAlerts={alerts} />
+      <AlertsPage liveAlerts={alerts} />
     ),
 
     settings: (

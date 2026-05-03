@@ -5,7 +5,7 @@ import os
 class VectorStore:
     def __init__(self):
         """Initialize the vector database for storing and retrieving documents"""
-        print("📚 Initializing Vector Store...")
+        print("[INFO] Initializing Vector Store...")
         
         # Create a persistent ChromaDB client
         self.client = chromadb.PersistentClient(path="./chroma_db")
@@ -18,14 +18,14 @@ class VectorStore:
         
         # Load embedding model (runs locally - no API calls)
         self.encoder = SentenceTransformer('all-MiniLM-L6-v2')
-        print("✅ Vector Store initialized with 384-dimension embeddings")
+        print("[SUCCESS] Vector Store initialized with 384-dimension embeddings")
     
     def index_documents(self, folder_path="./policies"):
         """Index all policy documents from the policies folder"""
-        print(f"📂 Indexing documents from {folder_path}...")
+        print(f"[INFO] Indexing documents from {folder_path}...")
         
         if not os.path.exists(folder_path):
-            print(f"❌ Folder {folder_path} not found!")
+            print(f"[ERROR] Folder {folder_path} not found!")
             return
         
         files = [f for f in os.listdir(folder_path) if f.endswith('.txt')]
@@ -50,9 +50,9 @@ class VectorStore:
                 metadatas=[{"source": filename, "type": "policy"}],
                 documents=[content]
             )
-            print(f"   ✅ Indexed: {filename}")
+            print(f"   [SUCCESS] Indexed: {filename}")
         
-        print(f"✅ Indexed {len(files)} documents")
+        print(f"[SUCCESS] Indexed {len(files)} documents")
     
     def search(self, query, employee_role=None, n_results=3):
         """Search for relevant documents based on query"""

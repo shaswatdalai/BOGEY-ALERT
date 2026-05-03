@@ -15,7 +15,7 @@ export default function ExceptionManager() {
 
     const fetchExceptions = async () => {
         try {
-            const response = await fetch('http://localhost:8000/exceptions');
+            const response = await fetch('http://localhost:9091/exceptions');
             const data = await response.json();
             setExceptions(data.exceptions || []);
         } catch (error) {
@@ -34,7 +34,7 @@ export default function ExceptionManager() {
         };
 
         try {
-            await fetch('http://localhost:8000/exceptions/override', {
+            await fetch('http://localhost:9091/exceptions/override', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(override)

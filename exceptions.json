@@ -1,19 +1,19 @@
 {
-    "active_projects": [
-        {
-            "id": "PROJ-001",
-            "name": "Q4 Financial Report",
-            "team": [
-                "FRIEND_001",
-                "EMP_000"
-            ],
-            "start_date": "2026-05-01",
-            "end_date": "2026-05-10",
-            "max_files_per_day": 200,
-            "max_sensitive_per_day": 50,
-            "allow_off_hours": true,
-            "reason": "Annual financial reporting deadline"
-        }
-    ],
-    "temporary_overrides": []
+  "active_projects": [
+    {
+      "id": "PROJ-001",
+      "name": "Q4 Financial Report",
+      "team": [
+        "FRIEND_001",
+        "EMP_000"
+      ],
+      "start_date": "2026-05-01",
+      "end_date": "2026-05-10",
+      "max_files_per_day": 200,
+      "max_sensitive_per_day": 50,
+      "allow_off_hours": true,
+      "reason": "Annual financial reporting deadline"
+    }
+  ],
+  "temporary_overrides": []
 }

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Save, RotateCcw, CheckCircle } from "lucide-react";
 
 const DEFAULTS = {
-  apiUrl:             "http://localhost:8000",
+  apiUrl:             "http://localhost:9091",
   criticalThreshold:  80,
   highThreshold:      60,
   mediumThreshold:    35,
@@ -81,7 +81,7 @@ export default function SettingsPage() {
 
       {/* API Connection */}
       <Section title="API Connection" sub="Configure the connection to your Python api.py backend">
-        <Field label="API Base URL" sub="The address where api.py is running (default: localhost:8000)">
+        <Field label="API Base URL" sub="The address where api.py is running (default: localhost:9091)">
           <input
             className={`${inputCls} w-60 text-left`}
             value={cfg.apiUrl}

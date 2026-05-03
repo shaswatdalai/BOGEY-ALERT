@@ -4,17 +4,26 @@ import json
 class RAGPipeline:
     def __init__(self):
         """Initialize the RAG pipeline"""
-        print("🧠 Initializing RAG Pipeline...")
+        print("[INFO] Initializing RAG Pipeline...")
         self.vector_store = VectorStore()
         
+        # Load Company Data Detector if available
+        self.data_detector = None
+        try:
+            from company_data_detector import CompanyDataDetector
+            self.data_detector = CompanyDataDetector()
+            print("[SUCCESS] Company Data Detector integrated")
+        except Exception as e:
+            print(f"[WARN] Could not load CompanyDataDetector: {e}")
+
         # Index documents (only needs to be done once)
         try:
             self.vector_store.index_documents()
         except Exception as e:
-            print(f"⚠️ Could not index documents: {e}")
+            print(f"[WARN] Could not index documents: {e}")
             print("   Make sure you have a 'policies' folder with .txt files")
         
-        print("✅ RAG Pipeline ready")
+        print("[SUCCESS] RAG Pipeline ready")
     
     def get_context_for_anomaly(self, anomaly_data):
         """Retrieve relevant context for an anomalous activity"""
@@ -54,39 +63,76 @@ class RAGPipeline:
             return "insider threat detection security policy violation"
     
     def generate_explanation(self, anomaly_data, risk_score, risk_level):
-        """Generate a human-readable explanation of the risk"""
+        """Generate a narrative explanation of the risk activity"""
         
         # Get context
         context = self.get_context_for_anomaly(anomaly_data)
         
         # Build explanation
+        emp_id = anomaly_data.get('employee_id', 'Unknown User')
         files = anomaly_data.get('files_accessed', 0)
         hour = anomaly_data.get('login_hour', 9)
         sensitive = anomaly_data.get('sensitive_files', 0)
         role = anomaly_data.get('role', 'employee')
+        file_names = anomaly_data.get('file_names', [])
         
-        explanation = f"""
-        🚨 RISK ASSESSMENT EXPLANATION
-        
-        What happened:
-        • Employee ({role}) accessed {files} files at {hour}:00
-        • {sensitive} of these were sensitive/restricted files
-        
-        Why this is concerning:
-        """
-        
-        if files > 100:
-            explanation += f"\n        • Downloaded {files} files - exceeds typical daily volume by {int(files/10)}x"
+        # 1. SMART NARRATIVE: Build a specific story based on data
+        narrative = []
+        if sensitive > 0:
+            narrative.append(f"User {emp_id} ({role}) accessed {sensitive} sensitive files.")
+        elif files > 100:
+            narrative.append(f"User {emp_id} triggered a volume alert by accessing {files} files.")
+        else:
+            narrative.append(f"System flagged unusual behavior for user {emp_id}.")
+
         if hour < 6 or hour > 22:
-            explanation += f"\n        • Activity at {hour}:00 - outside standard working hours (9 AM - 5 PM)"
-        if sensitive > 20:
-            explanation += f"\n        • Accessed {sensitive} sensitive files - requires special authorization"
+            narrative.append(f"The activity occurred at {hour}:00, which is outside typical business hours.")
         
-        explanation += f"\n\n        Risk Score: {risk_score}/100 ({risk_level})"
+        if files > 200:
+            narrative.append("The high volume of access suggests a potential bulk data collection attempt.")
+
+        explanation = f"[NARRATIVE SUMMARY]\n{' '.join(narrative)}\n\n"
+        explanation += f"Risk Assessment: {risk_level} ({risk_score}/100)\n\n"
         
-        # Add policy context if available
+        # 2. EXACT DATA DETAILS: Use CompanyDataDetector more effectively
+        if self.data_detector and file_names:
+            explanation += "[DATA CONTENT ANALYSIS]\n"
+            sensitive_files = []
+            for fname in file_names:
+                analysis = self.data_detector.analyze_file("", fname)
+                if analysis["is_company_data"]:
+                    sensitive_files.append(f"- '{fname}': {analysis['data_type']} ({analysis['sensitivity']} Risk). {analysis['reason']}")
+            
+            if sensitive_files:
+                explanation += "\n".join(sensitive_files[:5]) + "\n"
+            else:
+                explanation += "- No specific restricted patterns in filenames, but behavioral anomalies detected.\n"
+        
+        # 3. EXACT POLICY DETAILS: Search for specific rules in retrieved text
         if context['relevant_policies']:
-            explanation += "\n\n        Relevant policies found in database. Security team should review."
+            explanation += "\n[POLICY GUIDANCE]\n"
+            policy_text = context['relevant_policies'][0]
+            
+            # Look for specific rules in the text
+            rules_found = False
+            lines = policy_text.split('\n')
+            
+            # Map anomaly types to keywords in policies
+            keywords = []
+            if files > 100: keywords.append("bulk")
+            if sensitive > 0: keywords.append("restricted")
+            if hour < 6 or hour > 22: keywords.append("access")
+            
+            for line in lines:
+                for kw in keywords:
+                    if kw.lower() in line.lower() and ('>' in line or 'Level' in line or 'Rule' in line):
+                        explanation += f"- Policy Violation Rule: {line.strip()}\n"
+                        rules_found = True
+                        break
+                if rules_found: break # Just one for now
+            
+            if not rules_found:
+                explanation += f"- Based on {lines[0].strip()}, this activity requires justification.\n"
         
         return explanation, context
 
@@ -109,18 +155,12 @@ if __name__ == "__main__":
         "data_mb": 5000
     }
     
-    print("\n🔍 Testing with suspicious activity:")
-    print(f"   Employee: {test_anomaly['employee_id']}")
-    print(f"   Role: {test_anomaly['role']}")
-    print(f"   Activity: {test_anomaly['files_accessed']} files at {test_anomaly['login_hour']}:00")
-    
-    # Get context
     context = rag.get_context_for_anomaly(test_anomaly)
     
-    print(f"\n📋 Search Query: {context['query']}")
-    print(f"📄 Relevant Policies Found: {len(context['relevant_policies'])}")
+    print(f"\n[INFO] Search Query: {context['query']}")
+    print(f"[INFO] Relevant Policies Found: {len(context['relevant_policies'])}")
     
     # Generate explanation
     explanation, ctx = rag.generate_explanation(test_anomaly, 64, "HIGH")
-    print(f"\n💡 Generated Explanation:")
+    print(f"\n[INFO] Generated Explanation:")
     print(explanation)

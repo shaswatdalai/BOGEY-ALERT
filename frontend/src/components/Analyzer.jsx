@@ -8,6 +8,7 @@ const BASELINES = {
   EMP_001: { files: 15, hour: 10, mb: 80 },
   EMP_002: { files: 8, hour: 9, mb: 40 },
   EMP_003: { files: 5, hour: 9, mb: 20 },
+  FRIEND_001: { files: 12, hour: 9, mb: 60 },  // ← ADDED
 };
 
 // ✅ keep logic SAME but rename function properly
@@ -152,7 +153,7 @@ const Analyzer = forwardRef(function Analyzer({ onResult }, ref) {
       sens: f.sens,
       mb: f.mb,
       emp: f.emp,
-      ragExplanation: null,  // NEW: Initialize RAG explanation
+      ragExplanation: null,
     };
 
     try {
@@ -170,7 +171,7 @@ const Analyzer = forwardRef(function Analyzer({ onResult }, ref) {
         score: data.risk_score,
         level: data.risk_level,
         action: data.recommended_action,
-        ragExplanation: data.rag_explanation || null,  // NEW: Capture RAG explanation from API
+        ragExplanation: data.rag_explanation || null,
       };
 
     } catch { }
@@ -212,6 +213,7 @@ const Analyzer = forwardRef(function Analyzer({ onResult }, ref) {
             <option value="EMP_001">EMP_001 — Manager</option>
             <option value="EMP_002">EMP_002 — Analyst</option>
             <option value="EMP_003">EMP_003 — Intern</option>
+            <option value="FRIEND_001">FRIEND_001 — Remote Employee</option>  {/* ← ADDED */}
 
           </select>
         </div>

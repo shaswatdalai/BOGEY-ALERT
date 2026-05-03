@@ -1,0 +1,168 @@
+{
+    "sensitive_keywords": [
+        "customer",
+        "client",
+        "user",
+        "patient",
+        "member",
+        "account",
+        "employee",
+        "staff",
+        "salary",
+        "payroll",
+        "hr",
+        "benefits",
+        "compensation",
+        "financial",
+        "revenue",
+        "profit",
+        "invoice",
+        "payment",
+        "transaction",
+        "bank",
+        "source",
+        "code",
+        "repository",
+        "git",
+        "commit",
+        "database",
+        "backup",
+        "dump",
+        "api_key",
+        "secret",
+        "token",
+        "password",
+        "credential",
+        "key",
+        "certificate",
+        "confidential",
+        "internal",
+        "restricted",
+        "proposal",
+        "contract",
+        "nda"
+    ],
+    "safe_keywords": [
+        "vacation",
+        "holiday",
+        "personal",
+        "family",
+        "friend",
+        "recipe",
+        "cooking",
+        "movie",
+        "song",
+        "music",
+        "game",
+        "shopping",
+        "food",
+        "restaurant",
+        "travel",
+        "photo",
+        "image",
+        "video",
+        "audio",
+        "test",
+        "file",
+        "temp",
+        "dummy"
+    ],
+    "file_patterns": {
+        "customer_data": {
+            "keywords": [
+                "customer",
+                "client",
+                "user",
+                "patient",
+                "member",
+                "account"
+            ],
+            "extensions": [
+                ".csv",
+                ".xlsx",
+                ".json"
+            ],
+            "regex": [
+                "cust_[0-9]+",
+                "user_[0-9]+"
+            ],
+            "sensitivity": "HIGH"
+        },
+        "financial_data": {
+            "keywords": [
+                "salary",
+                "payment",
+                "invoice",
+                "transaction",
+                "financial",
+                "revenue",
+                "profit",
+                "bank"
+            ],
+            "extensions": [
+                ".xlsx",
+                ".csv",
+                ".pdf"
+            ],
+            "regex": [
+                "\\$[0-9,]+",
+                "[0-9]+\\s?USD"
+            ],
+            "sensitivity": "HIGH"
+        },
+        "source_code": {
+            "keywords": [
+                "source",
+                "code",
+                "repository",
+                "git",
+                "commit",
+                "clone"
+            ],
+            "extensions": [
+                ".py",
+                ".js",
+                ".java",
+                ".go",
+                ".rs",
+                ".cpp",
+                ".c",
+                ".h"
+            ],
+            "sensitivity": "HIGH"
+        },
+        "credentials": {
+            "keywords": [
+                "api_key",
+                "secret",
+                "token",
+                "password",
+                "credential"
+            ],
+            "extensions": [
+                ".key",
+                ".pem",
+                ".crt",
+                ".env",
+                ".p12"
+            ],
+            "sensitivity": "CRITICAL"
+        },
+        "internal_documents": {
+            "keywords": [
+                "internal",
+                "confidential",
+                "restricted",
+                "proposal",
+                "contract",
+                "nda"
+            ],
+            "extensions": [
+                ".pdf",
+                ".docx",
+                ".doc"
+            ],
+            "sensitivity": "MEDIUM"
+        }
+    }
+}
