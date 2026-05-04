@@ -22,3 +22,6 @@ frontend/dist/
 
 # Large binaries
 ngrok.exe
+
+# Vector Database
+chroma_db/
