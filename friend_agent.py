@@ -9,9 +9,12 @@ from pathlib import Path
 # ============================================
 # CONFIGURATION - USE YOUR NGROK URL
 # ============================================
-YOUR_API_URL = "https://septum-agony-skillful.ngrok-free.dev"  # ← Local testing URL
+YOUR_API_URL = "http://localhost:9091"  # ← Local testing URL
 
 EMPLOYEE_ID = "EMP_002"  # Employee ID for your friend
+
+# Set to True to enable OS screen lock on REJECTED threats (False for development testing)
+ENABLE_WORKSTATION_LOCK = False  
 # ============================================
 
 # ============================================
@@ -197,6 +200,86 @@ def get_file_sensitivity_score(filename, ext):
 
 
 # ============================================
+# NATIVE GUI POPUP & AUTOMATED ENFORCEMENT
+# ============================================
+
+def prompt_justification_gui(employee_id, file_names, risk_level):
+    """Displays an always-on-top native Desktop modal pop-up for employee justification"""
+    try:
+        import tkinter as tk
+        from tkinter import simpledialog
+        
+        root = tk.Tk()
+        root.withdraw() # Hide empty main root window
+        root.attributes("-topmost", True) # Force pop-up on top of all open desktop apps
+        
+        file_str = ", ".join(file_names[:3]) if file_names else "restricted company file"
+        prompt_msg = (
+            f"⚠️ BOGEY-ALERT SECURITY AUDIT REQUIRED\n\n"
+            f"Employee ID: {employee_id}\n"
+            f"Threat Risk Level: {risk_level}\n"
+            f"Flagged File(s): {file_str}\n\n"
+            f"Your file activity triggered an insider threat audit.\n"
+            f"Please enter your official business justification:"
+        )
+        
+        excuse = simpledialog.askstring(
+            title="🛡️ BOGEY-ALERT Security Audit",
+            prompt=prompt_msg,
+            parent=root
+        )
+        root.destroy()
+        if excuse and excuse.strip():
+            return excuse.strip()
+    except Exception as e:
+        print(f"[DEBUG] GUI Prompt fallback to CLI: {e}")
+    
+    # Fallback to console input if GUI is closed or headless
+    return input("\nYour Justification: ")
+
+
+def enforce_quarantine_and_lock(activity_files, is_rejected=False):
+    """Quarantines flagged sensitive files and enforces security policy when AI rejects justification"""
+    import shutil
+    import platform
+    import ctypes
+
+    quarantine_dir = Path.home() / ".bogey_quarantine"
+    os.makedirs(quarantine_dir, exist_ok=True)
+    
+    quarantined = []
+    monitored_dirs = [Path.home() / "Downloads", Path.home() / "Documents", Path.home() / "Desktop", Path(os.getcwd())]
+    
+    for fname in activity_files:
+        for folder in monitored_dirs:
+            target_path = folder / fname
+            if target_path.exists():
+                dest_path = quarantine_dir / fname
+                try:
+                    shutil.move(str(target_path), str(dest_path))
+                    quarantined.append(fname)
+                    break
+                except Exception as e:
+                    print(f"[ENFORCEMENT WARN] Could not isolate {fname}: {e}")
+    
+    if quarantined:
+        print(f"\n🔒 [AUTOMATED ENFORCEMENT] Isolated {len(quarantined)} sensitive file(s) to quarantine.")
+        for qf in quarantined:
+            print(f"   ↳ Removed '{qf}' from employee folder -> Moved to ~/.bogey_quarantine/{qf}")
+
+    if is_rejected:
+        print("\n🚨 [SECURITY LOCKDOWN] Threat score escalated to CRITICAL (100/100). SOC Admin alerted.")
+        if ENABLE_WORKSTATION_LOCK and platform.system() == "Windows":
+            try:
+                print("🔒 [WORKSTATION LOCK] Locking Windows user session...")
+                ctypes.windll.user32.LockWorkStation()
+            except Exception as e:
+                pass
+        else:
+            print("🔒 [ENFORCEMENT SIMULATION] Workstation lock policy active (Screen lock bypassed in test mode).")
+
+
+# ============================================
 # FILE MONITORING AGENT
 # ============================================
 
@@ -206,6 +289,7 @@ class DeltaFileMonitor:
             str(Path.home() / "Downloads"),
             str(Path.home() / "Documents"),
             str(Path.home() / "Desktop"),
+            str(Path.home() / "Desktop" / "ThreatSim"),
             os.getcwd()
         ]
         self.known_files = self._get_all_current_files()
@@ -235,6 +319,9 @@ class DeltaFileMonitor:
         current_files = self._get_all_current_files()
         new_files = current_files - self.known_files
         self.known_files = current_files
+        
+        if new_files:
+            print(f"[DEBUG] Found {len(new_files)} new files in monitored folders.")
         
         for file_path in new_files:
             file = Path(file_path)
@@ -313,13 +400,14 @@ class DeltaFileMonitor:
                 
                 if result.get("risk_level") in ["HIGH", "CRITICAL"]:
                     print("\n" + "!"*60)
-                    print("⚠️ SECURITY AUDIT REQUIRED")
-                    print("Unusual or highly sensitive file activity has been flagged.")
-                    print("Please provide a valid business justification for this activity:")
+                    print("⚠️ SECURITY AUDIT REQUIRED - GUI Pop-up Prompted on Employee Screen")
                     print("!"*60)
-                    excuse = input("\nYour Justification: ")
                     
-                    print("\n[AI Auditor] Evaluating your response...")
+                    # Launch Native GUI Pop-up Window on Employee Screen
+                    excuse = prompt_justification_gui(EMPLOYEE_ID, activity["file_names"], result.get("risk_level"))
+                    
+                    print(f"\n[Employee Justification Submitted]: \"{excuse}\"")
+                    print("\n[AI Security Auditor] Evaluating response via Groq LLM...")
                     try:
                         interrogate_res = requests.post(
                             f"{YOUR_API_URL}/interrogate",
@@ -334,15 +422,23 @@ class DeltaFileMonitor:
                         )
                         if interrogate_res.status_code == 200:
                             ai_verdict = interrogate_res.json()
-                            print(f"\n[{ai_verdict.get('risk_level', 'EVALUATED')}] AI Verdict: {ai_verdict.get('recommended_action')}")
+                            risk_lbl = ai_verdict.get('risk_level', 'EVALUATED')
+                            action_str = ai_verdict.get('recommended_action') or ai_verdict.get('error') or 'Processed'
+                            print(f"\n[{risk_lbl}] AI Verdict: {action_str}")
                             print("!"*60 + "\n")
+
+                            # Trigger Automated Enforcement if Verdict is REJECTED / CRITICAL
+                            if risk_lbl == "CRITICAL" or "REJECTED" in action_str.upper():
+                                enforce_quarantine_and_lock(activity["file_names"], is_rejected=True)
+
                     except Exception as e:
                         print(f"Failed to submit justification: {e}")
                 
                 return result
                 
         except Exception as e:
-            pass
+            print(f"[ERROR] Could not connect to BOGEY-ALERT API at {YOUR_API_URL}")
+            print(f"        Error: {e}")
         
         return None
     

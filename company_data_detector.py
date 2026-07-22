@@ -106,6 +106,7 @@ class CompanyDataDetector:
                     "is_company_data": True,
                     "sensitivity": "MEDIUM",
                     "reason": f"File contains sensitive keyword: '{keyword}'",
+                    "data_type": "sensitive_data",
                     "matched_pattern": keyword
                 }
         

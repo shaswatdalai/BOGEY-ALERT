@@ -101,7 +101,8 @@ class RAGPipeline:
             for fname in file_names:
                 analysis = self.data_detector.analyze_file("", fname)
                 if analysis["is_company_data"]:
-                    sensitive_files.append(f"- '{fname}': {analysis['data_type']} ({analysis['sensitivity']} Risk). {analysis['reason']}")
+                    data_type = analysis.get('data_type', 'sensitive_data')
+                    sensitive_files.append(f"- '{fname}': {data_type} ({analysis['sensitivity']} Risk). {analysis['reason']}")
             
             if sensitive_files:
                 explanation += "\n".join(sensitive_files[:5]) + "\n"

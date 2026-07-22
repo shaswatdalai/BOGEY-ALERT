@@ -161,31 +161,42 @@ def health_check():
 @app.post("/interrogate")
 async def interrogate_employee(request: InterrogationRequest) -> Dict:
     prompt = f"""You are an internal AI Security Auditor for BOGEY-ALERT. 
-Employee {request.employee_id} recently triggered a HIGH/CRITICAL security alert.
+Employee {request.employee_id} recently accessed sensitive files triggering a security review.
 Context: {request.context}
-Original Risk Score: {request.original_risk_score}
 
-The employee has provided the following business justification/excuse:
+The employee submitted the following justification:
 "{request.excuse}"
 
-Evaluate this excuse. If it seems like a valid business reason (e.g., asked by manager, routine maintenance), respond with EXACTLY the word "ACCEPTED" on the first line, followed by a short 1-sentence reason on the second line.
-If it seems evasive, suspicious, or violates standard policy, respond with EXACTLY the word "REJECTED" on the first line, followed by a 1-sentence reason on the second line.
+EVALUATION INSTRUCTIONS:
+- If the justification mentions a legitimate work task (e.g. asked by manager, audit, Q3 review, routine maintenance, project assignment, developer task), respond with EXACTLY the word "ACCEPTED" on the first line, followed by a 1-sentence explanation on the second line.
+- ONLY respond with "REJECTED" if the excuse is explicitly suspicious (e.g. personal USB transfer, personal backup, home copying, stealing, or evasive answers like 'no reason').
 """
 
     try:
-        response = requests.post(
-            "https://api.groq.com/openai/v1/chat/completions",
-            headers={"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"},
-            json={
-                "model": "llama3-8b-8192",
-                "messages": [{"role": "user", "content": prompt}],
-                "temperature": 0.2,
-                "max_tokens": 100
-            },
-            timeout=10
-        )
-        
-        if response.status_code == 200:
+        models_to_try = ["llama-3.1-8b-instant", "llama-3.3-70b-versatile"]
+        response = None
+        for m in models_to_try:
+            try:
+                res = requests.post(
+                    "https://api.groq.com/openai/v1/chat/completions",
+                    headers={"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"},
+                    json={
+                        "model": m,
+                        "messages": [{"role": "user", "content": prompt}],
+                        "temperature": 0.2,
+                        "max_tokens": 100
+                    },
+                    timeout=10
+                )
+                if res.status_code == 200:
+                    response = res
+                    break
+                else:
+                    print(f"[WARN] Groq model {m} returned {res.status_code}: {res.text}")
+            except Exception as req_err:
+                print(f"[WARN] Failed to connect to Groq with model {m}: {req_err}")
+
+        if response and response.status_code == 200:
             content = response.json()["choices"][0]["message"]["content"].strip().split("\n")
             verdict = content[0].strip().upper()
             reason = content[1].strip() if len(content) > 1 else ""
@@ -203,7 +214,7 @@ If it seems evasive, suspicious, or violates standard policy, respond with EXACT
                 "is_anomaly": True,
                 "risk_score": risk_score,
                 "risk_level": risk_level,
-                "recommended_action": f"AI Interrogation: {reason}",
+                "recommended_action": f"AI Interrogation ({verdict}): {reason}",
                 "rag_explanation": f"[AI SECURITY AUDIT]\nVerdict: {verdict}\nReason: {reason}",
                 "details": {"current_files": 0, "normal_files_baseline": 0, "current_login_hour": 0, "normal_login_hour": 0, "files_deviation": 0}
             }
@@ -213,8 +224,29 @@ If it seems evasive, suspicious, or violates standard policy, respond with EXACT
             
     except Exception as e:
         print(f"Error during interrogation: {e}")
-        
-    return {"status": "failed", "error": "LLM interrogation failed"}
+
+    # Fallback Rule Evaluation if LLM API fails
+    excuse_lower = request.excuse.lower()
+    suspicious_triggers = ["usb", "personal", "home", "steal", "copy", "idk", "no reason", "dump"]
+    is_suspicious = any(trig in excuse_lower for trig in suspicious_triggers)
+    
+    verdict = "REJECTED" if is_suspicious else "ACCEPTED"
+    risk_level = "CRITICAL" if is_suspicious else "RESOLVED"
+    risk_score = 100 if is_suspicious else 10
+    reason = "Unsanctioned personal data transfer detected." if is_suspicious else "Standard business justification provided."
+
+    alert = {
+        "employee_id": request.employee_id,
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "is_anomaly": True,
+        "risk_score": risk_score,
+        "risk_level": risk_level,
+        "recommended_action": f"Rule Interrogation ({verdict}): {reason}",
+        "rag_explanation": f"[SECURITY AUDIT]\nVerdict: {verdict}\nReason: {reason}",
+        "details": {"current_files": 0, "normal_files_baseline": 0, "current_login_hour": 0, "normal_login_hour": 0, "files_deviation": 0}
+    }
+    asyncio.create_task(manager.broadcast(alert))
+    return alert
 
 @app.post("/detect")
 async def detect_threat(activity: ActivityRequest) -> Dict:

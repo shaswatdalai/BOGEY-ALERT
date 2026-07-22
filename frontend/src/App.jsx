@@ -67,55 +67,74 @@ export default function App() {
 
   }
 
-  // NEW: WebSocket connection for live alerts (e.g., from friend_agent.py)
+  // Live WebSocket connection with auto-reconnection for live alerts (from friend_agent.py & api.py)
   useEffect(() => {
-    const ws = new WebSocket("ws://localhost:9091/ws/alerts");
-    
-    ws.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        
-        // Map the backend response to the frontend alert format
-        setAlerts((prev) => [
-          {
-            emp: data.employee_id || "EMP_000",
-            hr: data.details?.current_login_hour || 0,
-            files: data.details?.current_files || 0,
-            sens: data.sensitive_files || 0,
-            mb: data.data_mb || 0,
-            score: data.risk_score,
-            level: data.risk_level.replace(/[^a-zA-Z]/g, '').trim().toUpperCase(), // Strip emojis like "🔴 CRITICAL" -> "CRITICAL"
-            time: new Date().toLocaleTimeString("en-US", { hour12: false }),
-            ragExplanation: data.rag_explanation || null,
-            file_names: data.file_names || []
-          },
-          ...prev.slice(0, 49)
-        ]);
+    let ws = null;
+    let reconnectTimer = null;
 
-        // Update counts
-        const rawLevel = data.risk_level.replace(/[^a-zA-Z]/g, '').trim().toUpperCase();
-        const bucket = rawLevel === "NORMAL" || rawLevel === "EXEMPTED" ? "LOW" : rawLevel;
-        
-        setCounts((c) => ({
-          ...c,
-          [bucket]: (c[bucket] || 0) + 1
-        }));
+    const connectWebSocket = () => {
+      ws = new WebSocket("ws://localhost:9091/ws/alerts");
 
-        // Flash latest threat score if we want (optional)
-        setThreat(data.risk_score);
-        if (data.risk_score >= 80) setColor("#E24B4A");
-        else if (data.risk_score >= 60) setColor("#D97706");
-        else if (data.risk_score >= 35) setColor("#B45309");
-        else setColor("#34D399");
-        
-      } catch (err) {
-        console.error("Error parsing live alert:", err);
-      }
+      ws.onopen = () => {
+        console.log("🟢 Connected to BOGEY-ALERT Real-Time Alert Stream");
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          
+          setAlerts((prev) => [
+            {
+              emp: data.employee_id || "EMP_000",
+              hr: data.details?.current_login_hour || new Date().getHours(),
+              files: data.details?.current_files || 1,
+              sens: data.sensitive_files || 0,
+              mb: data.data_mb || 0,
+              score: data.risk_score,
+              level: data.risk_level.replace(/[^a-zA-Z]/g, '').trim().toUpperCase(),
+              time: new Date().toLocaleTimeString("en-US", { hour12: false }),
+              ragExplanation: data.rag_explanation || null,
+              file_names: data.file_names || []
+            },
+            ...prev.slice(0, 49)
+          ]);
+
+          const rawLevel = data.risk_level.replace(/[^a-zA-Z]/g, '').trim().toUpperCase();
+          const validBuckets = ["CRITICAL", "HIGH", "MEDIUM", "LOW"];
+          const bucket = validBuckets.includes(rawLevel) ? rawLevel : "LOW";
+          
+          setCounts((c) => ({
+            ...c,
+            [bucket]: (c[bucket] || 0) + 1
+          }));
+
+          setThreat(data.risk_score);
+          if (data.risk_score >= 80) setColor("#E24B4A");
+          else if (data.risk_score >= 60) setColor("#D97706");
+          else if (data.risk_score >= 35) setColor("#B45309");
+          else setColor("#34D399");
+          
+        } catch (err) {
+          console.error("Error parsing live alert:", err);
+        }
+      };
+
+      ws.onclose = () => {
+        console.warn("⚠️ WebSocket disconnected. Retrying in 2 seconds...");
+        reconnectTimer = setTimeout(connectWebSocket, 2000);
+      };
+
+      ws.onerror = () => {
+        ws.close();
+      };
     };
 
-    ws.onclose = () => console.log("WebSocket disconnected");
-    
-    return () => ws.close();
+    connectWebSocket();
+
+    return () => {
+      if (reconnectTimer) clearTimeout(reconnectTimer);
+      if (ws) ws.close();
+    };
   }, []);
 
   const unresolved =

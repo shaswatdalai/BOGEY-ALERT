@@ -41,14 +41,34 @@ export default function ActivityFeed({ alerts }) {
                     <div className="mt-1 truncate font-mono text-[11px] text-white/40">
                       {a.files} files @ {a.hr}:00 · {a.sens} sensitive · {a.mb} MB
                     </div>
-                    {/* NEW: RAG Explanation inline */}
+                    {/* NEW: RAG & AI Interrogation Verdict Explanation Card */}
                     {hasRag && (
-                      <div className="mt-2 rounded-md bg-luxury-blue/10 p-2 border border-luxury-blue/20">
-                        <div className="flex items-start gap-1.5">
-                          <span className="text-xs">📋</span>
-                          <span className="text-[10px] font-medium text-luxury-blue/80 break-words">
-                            {a.ragExplanation.length > 100 ? a.ragExplanation.substring(0, 100) + "..." : a.ragExplanation}
+                      <div className={`mt-2 rounded-xl p-3 border transition-all ${
+                        a.ragExplanation.includes("REJECTED") 
+                          ? "bg-red-500/15 border-red-500/40 text-red-300 shadow-[0_0_15px_rgba(239,68,68,0.25)]" 
+                          : a.ragExplanation.includes("ACCEPTED")
+                          ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-300 shadow-[0_0_15px_rgba(16,185,129,0.25)]"
+                          : "bg-luxury-blue/10 border-luxury-blue/20 text-luxury-blue/90"
+                      }`}>
+                        <div className="flex items-start gap-2">
+                          <span className="text-sm">
+                            {a.ragExplanation.includes("REJECTED") ? "🔒" : a.ragExplanation.includes("ACCEPTED") ? "✅" : "📋"}
                           </span>
+                          <div className="flex-1">
+                            {a.ragExplanation.includes("REJECTED") && (
+                              <div className="text-[11px] font-extrabold uppercase tracking-wider text-red-400 mb-1 flex items-center gap-1">
+                                <span>🚨 WORKSTATION LOCKED & FILE QUARANTINED</span>
+                              </div>
+                            )}
+                            {a.ragExplanation.includes("ACCEPTED") && (
+                              <div className="text-[11px] font-extrabold uppercase tracking-wider text-emerald-400 mb-1 flex items-center gap-1">
+                                <span>✅ JUSTIFICATION ACCEPTED - RISKS RESOLVED</span>
+                              </div>
+                            )}
+                            <span className="text-[11px] font-medium leading-relaxed block opacity-90">
+                              {a.ragExplanation}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     )}
